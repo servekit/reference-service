@@ -20,7 +20,9 @@ import (
 	"errors"
 	"fmt"
 	commonv1 "github.com/servekit/api/gen/go/common/v1"
+	referencev1 "github.com/servekit/api/gen/go/reference/v1"
 	"github.com/servekit/reference-service/internal/jobs"
+	"github.com/servekit/reference-service/internal/service/reference"
 	"github.com/servekit/reference-service/internal/version"
 	"time"
 
@@ -40,6 +42,10 @@ import (
 type Service struct {
 	cfg *config.Config
 	mgr *lifecycle.Manager
+
+	// One field per domain subpackage. The reference domain is pure
+	// computation over compiled tables — no resources, no lifecycle.
+	reference *reference.Service
 
 	// startedAt is set once in New; Ping returns it for uptime.
 	startedAt int64
@@ -65,6 +71,8 @@ func New(cfg *config.Config, opts ...option.Option) (*Service, error) {
 	svc := &Service{
 		cfg: cfg,
 		mgr: mgr,
+
+		reference: reference.New(),
 
 		startedAt: time.Now().UnixMilli(),
 	}
@@ -110,8 +118,12 @@ func (s *Service) Ping(ctx context.Context) (*commonv1.Pong, error) {
 // setupJobs builds the jobs.Scheduler, registers it on s.mgr, and wires
 // periodic jobs. Signature is intentionally receiver-only: future jobs are
 // added inside this method as scheduler.AddFunc calls. Timezone default lives
-// in config.CronConfig's default tag.
+// in config.CronConfig's default tag. Module-mode embedders may pass a
+// config without a cron section — no cron configured means no scheduler.
 func (s *Service) setupJobs() error {
+	if s.cfg == nil || s.cfg.Cron == nil {
+		return nil
+	}
 	scheduler, err := jobs.New(&jobs.Deps{
 		Config: &cronx.Config{
 			Timezone:      s.cfg.Cron.Timezone,
@@ -123,4 +135,41 @@ func (s *Service) setupJobs() error {
 	}
 	s.mgr.Add("jobs", scheduler)
 	return nil
+}
+
+// --- facade methods (one per RPC, delegate to subpackage) ---
+
+// ListCountries delegates to the reference subpackage.
+func (s *Service) ListCountries(ctx context.Context, req *referencev1.ListCountriesRequest) (*referencev1.ListCountriesResponse, error) {
+	return s.reference.ListCountries(ctx, req)
+}
+
+// ListTimezones delegates to the reference subpackage.
+func (s *Service) ListTimezones(ctx context.Context, req *referencev1.ListTimezonesRequest) (*referencev1.ListTimezonesResponse, error) {
+	return s.reference.ListTimezones(ctx, req)
+}
+
+// ListLanguages delegates to the reference subpackage.
+func (s *Service) ListLanguages(ctx context.Context, req *referencev1.ListLanguagesRequest) (*referencev1.ListLanguagesResponse, error) {
+	return s.reference.ListLanguages(ctx, req)
+}
+
+// ListCurrencies delegates to the reference subpackage.
+func (s *Service) ListCurrencies(ctx context.Context, req *referencev1.ListCurrenciesRequest) (*referencev1.ListCurrenciesResponse, error) {
+	return s.reference.ListCurrencies(ctx, req)
+}
+
+// ListRegionGroups delegates to the reference subpackage.
+func (s *Service) ListRegionGroups(ctx context.Context, req *referencev1.ListRegionGroupsRequest) (*referencev1.ListRegionGroupsResponse, error) {
+	return s.reference.ListRegionGroups(ctx, req)
+}
+
+// ParsePhone delegates to the reference subpackage.
+func (s *Service) ParsePhone(ctx context.Context, req *referencev1.ParsePhoneRequest) (*referencev1.ParsePhoneResponse, error) {
+	return s.reference.ParsePhone(ctx, req)
+}
+
+// ResolveCodes delegates to the reference subpackage.
+func (s *Service) ResolveCodes(ctx context.Context, req *referencev1.ResolveCodesRequest) (*referencev1.ResolveCodesResponse, error) {
+	return s.reference.ResolveCodes(ctx, req)
 }

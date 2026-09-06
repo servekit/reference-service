@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	commonv1 "github.com/servekit/api/gen/go/common/v1"
 	pb "github.com/servekit/api/gen/go/reference/v1"
-commonv1 "github.com/servekit/api/gen/go/common/v1"
-"github.com/servekit/go-common/grpcx/clienttest"
+	"github.com/servekit/go-common/grpcx/clienttest"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

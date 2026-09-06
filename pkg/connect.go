@@ -19,7 +19,7 @@ var moduleClaim lifecycle.ModuleClaim
 // resource injection for module mode — shared db/redis via WithDB/WithRedis,
 // shared upstream handlers via the upstream's own WithXxxHandler options.
 type ConnectConfig struct {
-	Mode   configx.Mode          // "grpc" | "module" ("" = module)
+	Mode   configx.Mode    // "grpc" | "module" ("" = module)
 	Target string          // grpc dial target; required when Mode=grpc
 	Config *config.Config  // module-mode config; required when Mode=module
 	Opts   []option.Option // module-mode resource injection

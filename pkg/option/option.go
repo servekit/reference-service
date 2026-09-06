@@ -30,7 +30,6 @@ package option
 
 import (
 	"github.com/robfig/cron/v3"
-	
 )
 
 // Option mutates Options.
@@ -44,13 +43,12 @@ type Options struct {
 	// that rather than inject a separate *cron.Cron. This option exists for
 	// advanced cases (e.g., a parent process sharing its scheduler).
 	Cron *cron.Cron
-	
 }
-	
+
 // WithCron injects an existing *cron.Cron. Caller owns its lifecycle. Most
 // periodic-task needs should extend the scaffold's jobs.Scheduler instead.
 func WithCron(c *cron.Cron) Option { return func(o *Options) { o.Cron = c } }
-	
+
 // Apply evaluates all options and returns the resolved Options. A nil field
 // means "not injected — service owns it and will Stop it on shutdown".
 func Apply(opts ...Option) Options {

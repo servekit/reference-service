@@ -7,10 +7,8 @@ package config
 
 import (
 	"github.com/servekit/go-common/configx"
-	
-	
+
 	"github.com/servekit/go-common/logging"
-	
 )
 
 // serviceName identifies this binary in config file lookup (/etc/<name>) and
@@ -30,8 +28,8 @@ const (
 // "optional dependency" via an inner Enabled bool, not pointer nil-check.
 type Config struct {
 	Server *ServerConfig
-	Cron *CronConfig
-	Log  *logging.Config
+	Cron   *CronConfig
+	Log    *logging.Config
 }
 
 // ServerConfig holds the gRPC server address.
@@ -47,7 +45,7 @@ type CronConfig struct {
 	// Timezone for cron expression evaluation. Defaults to Asia/Shanghai.
 	Timezone string `default:"Asia/Shanghai"`
 }
-	
+
 // Load reads config from the standard configx locations:
 //   - /etc/reference-service/config.yaml
 //   - ./config.yaml

@@ -58,7 +58,7 @@ func (s *Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest)
 		c := data.Countries[code]
 		out = append(out, &pb.Country{
 			Code:      c.Code,
-			Alpha_3:    c.Alpha3,
+			Alpha_3:   c.Alpha3,
 			DialCode:  c.DialCode,
 			FlagEmoji: c.FlagEmoji,
 			Name:      names[code],

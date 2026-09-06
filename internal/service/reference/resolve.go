@@ -22,7 +22,7 @@ func (s *Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (
 		if c, ok := data.Countries[code]; ok {
 			resp.Countries = append(resp.Countries, &pb.Country{
 				Code:      c.Code,
-				Alpha_3:    c.Alpha3,
+				Alpha_3:   c.Alpha3,
 				DialCode:  c.DialCode,
 				FlagEmoji: c.FlagEmoji,
 				Name:      data.CountryNames[l][code],

@@ -42,4 +42,3 @@ func NewModule(cfg *config.Config, opts ...option.Option) (*Handler, error) {
 	}
 	return handler.New(svc), nil
 }
-
