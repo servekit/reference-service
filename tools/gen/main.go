@@ -32,6 +32,8 @@ func main() {
 		{"countries", buildCountries},
 		{"timezones", buildTimezones},
 		{"languages", buildLanguages},
+		{"currencies", buildCurrencies},
+		{"region_groups", buildRegionGroups},
 	}
 	for _, s := range steps {
 		if err := s.fn(cache); err != nil {

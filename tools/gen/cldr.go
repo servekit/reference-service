@@ -81,13 +81,16 @@ type timezoneNamesFile struct {
 	} `json:"main"`
 }
 
+// currencyNameEntry is one CLDR currencies.json leaf.
+type currencyNameEntry struct {
+	DisplayName string `json:"displayName"`
+	Symbol      string `json:"symbol"`
+}
+
 type currenciesFile struct {
 	Main map[string]struct {
 		Numbers struct {
-			Currencies map[string]struct {
-				DisplayName string `json:"displayName"`
-				Symbol      string `json:"symbol"`
-			} `json:"currencies"`
+			Currencies map[string]currencyNameEntry `json:"currencies"`
 		} `json:"numbers"`
 	} `json:"main"`
 }
