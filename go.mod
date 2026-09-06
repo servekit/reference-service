@@ -11,7 +11,7 @@ require (
 	// Contract repo (servekit mode). Pinned at ../api HEAD when scaffolded; the
 	// new domain's generated code is not in that commit yet, so after pushing
 	// ../api bump it: go get github.com/servekit/api/gen/go@<commit> && go mod tidy
-	github.com/servekit/api/gen/go v0.0.0-20260906141123-c30e3d1429f8
+	github.com/servekit/api/gen/go v0.0.0-20260906161859-149a5fb4e9e4
 	// go-common carries the provider-contract stack (dbx/redisx.Connect,
 	// grpcx/clienttest) and the security bumps; keep this in step with the
 	// latest go-common main when the scaffold regenerates demo-service.
@@ -23,6 +23,11 @@ require (
 )
 
 require (
+	github.com/nyaruka/phonenumbers v1.8.1
+	golang.org/x/text v0.41.0
+)
+
+require (
 	cel.dev/expr v0.25.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -30,7 +35,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/cel-go v0.28.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
-	github.com/nyaruka/phonenumbers v1.8.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
@@ -46,7 +50,6 @@ require (
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260825221802-da73d73af1c5 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
