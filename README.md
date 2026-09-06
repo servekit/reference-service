@@ -13,8 +13,14 @@
 | `ListRegionGroups` | UN M49 层级（顶级=五大洲，不下发世界根），每层直接成员国 |
 | `ParsePhone` | libphonenumber 规则：E.164 归一、归属国、号码类型（mobile/fixed/…）；坏输入不报错，`is_valid=false` + `error_reason` |
 | `ResolveCodes` | 跨域批量码解析（取实体+验码，一次调用服务注册表单）；时区别名在此归一（`PRC`→`Asia/Shanghai`）；未命中进 `missing_*`，永不报错 |
+| `GetCountryProfile` | 一国聚合：基本信息 + 大洲/次区域链 + 官方语言（按人口序）+ 有效货币 + 时区 |
+| `ListCountriesByRegion` | 层级导航：一个 M49 分组（洲或次区域）下的全部国家，递归聚合，locale 排序 |
+| `GetCountryDefaults` | 自动填充：选了国家 → 主时区 / 默认货币 / 最主要官方语言 / 区号 / 示例号码（名称已按 locale 解析，表单无需二次调用） |
+| `GetDataInfo` | 快照元信息：数据版本、locale 集合、各域条目数（缓存新鲜度/排障） |
 
-每个 List/Resolve 响应带 `data_version`（数据生成时间戳）。
+每个 List/Resolve 响应带 `data_version`（数据生成时间戳）。`Country` 另带 `example_number`（libphonenumber 示例号码，作输入框 placeholder）。
+
+**主时区（PrimaryZones）推导**：zone1970.tab 首现规则 + CLDR primaryZones 11 条例外 + 覆盖全部多时区国家的人工校准表（tz/CLDR 数据不含人口排序，RU/AU 等国的组内顺序是字母序；校准表见 `tools/gen/timezones.go`，生成期自检校验区 ID 存在）。
 
 ## locale 约定（i18n）
 
