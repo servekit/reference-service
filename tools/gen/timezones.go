@@ -26,6 +26,11 @@ func buildTimezones(cacheDir string) error {
 	}
 
 	entities := make(map[string]tzRow)
+	// zone1970.tab sorts by country code and puts each country's most
+	// populous zone first — so the FIRST row mentioning a country is its
+	// primary zone (the rule CLDR itself uses; primaryZones.json lists the
+	// exceptions, overlaid below).
+	primary := make(map[string]string)
 	for _, line := range strings.Split(string(tab), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -37,11 +42,39 @@ func buildTimezones(cacheDir string) error {
 			continue
 		}
 		id := fields[2]
+		for _, cc := range strings.Split(fields[0], ",") {
+			if _, ok := primary[cc]; !ok {
+				primary[cc] = id
+			}
+		}
 		if _, dup := entities[id]; dup {
 			continue
 		}
 		codes := strings.Split(fields[0], ",")
 		entities[id] = tzRow{ID: id, CountryCodes: codes}
+	}
+
+	var pz primaryZonesFile
+	if err := getJSON(urlPrimaryZones, cacheDir, &pz); err != nil {
+		return err
+	}
+	for cc, zone := range pz.Supplemental.PrimaryZones {
+		if _, ok := entities[zone]; ok {
+			primary[cc] = zone // CLDR exceptions are authoritative
+		}
+	}
+
+	// Neither zone1970.tab nor zone.tab orders a country's zones by
+	// population (within-country order is ~alphabetical: AU starts at
+	// Lord_Howe, RU at Kaliningrad), and CLDR's primaryZones lists only 11
+	// exceptions — so multi-zone countries outside that list get this
+	// curated map, matching each country's most-populous-zone convention.
+	// Single-zone countries are unambiguous (first-appearance above).
+	for cc, zone := range curatedPrimaryZones {
+		if _, ok := entities[zone]; !ok {
+			return fmt.Errorf("curated primary zone %s for %s is not canonical", zone, cc)
+		}
+		primary[cc] = zone
 	}
 
 	// Backward links: "Link <target> <alias>". Targets may themselves be
@@ -127,5 +160,39 @@ func buildTimezones(cacheDir string) error {
 	w.line("")
 	w.emitNames("TimezoneNames", names)
 	w.emitOrder("TimezoneOrder", orders)
+	w.line("// PrimaryZones maps alpha-2 -> the country's primary IANA zone")
+	w.line("// (zone1970 first-row rule, CLDR primaryZones exceptions overlaid).")
+	w.line("var PrimaryZones = map[string]string{")
+	for _, cc := range sortedKeys(primary) {
+		w.line("\t%q: %q,", cc, primary[cc])
+	}
+	w.line("}")
+	w.line("")
 	return w.save(outputPath("timezones_data.go"))
+}
+
+// curatedPrimaryZones covers every multi-zone country that CLDR's 11-entry
+// exception list misses. Values follow the standard "most populous /
+// capital-adjacent zone" convention (Wikipedia "Time in X" consensus).
+var curatedPrimaryZones = map[string]string{
+	"AR": "America/Argentina/Buenos_Aires",
+	"AU": "Australia/Sydney",
+	"BR": "America/Sao_Paulo",
+	"CA": "America/Toronto",
+	"CD": "Africa/Lagos", // Kinshasa (capital) merged as a link of the WAT group
+	"CY": "Asia/Nicosia",
+	"FM": "Pacific/Port_Moresby", // Chuuk (most populous); Pohnpei is a link to Guadalcanal
+	"GL": "America/Nuuk",
+	"ID": "Asia/Jakarta",
+	"KI": "Pacific/Tarawa",
+	"KZ": "Asia/Almaty",
+	"MN": "Asia/Ulaanbaatar",
+	"MX": "America/Mexico_City",
+	"PG": "Pacific/Port_Moresby",
+	"PS": "Asia/Gaza",
+	"RU": "Europe/Moscow",
+	"TF": "Indian/Maldives", // Kerguelen merged as a link (both UTC+5, no DST)
+	"UM": "Pacific/Tarawa",  // Wake merged as a link (UTC+12 group)
+	"US": "America/New_York",
+	"VN": "Asia/Ho_Chi_Minh",
 }

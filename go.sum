@@ -57,8 +57,8 @@ github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0t
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
 github.com/sagikazarmark/locafero v0.11.0 h1:1iurJgmM9G3PA/I+wWYIOw/5SyBtxapeHDcg+AAIFXc=
 github.com/sagikazarmark/locafero v0.11.0/go.mod h1:nVIGvgyzw595SUSUE6tvCp3YYTeHs15MvlmU87WwIik=
-github.com/servekit/api/gen/go v0.0.0-20260906172205-4fc28327e262 h1:lZyXdIBztxgB1R8uLBiTQynrzMZrkmxB/9EdJYePmrA=
-github.com/servekit/api/gen/go v0.0.0-20260906172205-4fc28327e262/go.mod h1:eRewFd7DCi0TVeTc/7XgwS6IIKB841UltJ32J5NYcD4=
+github.com/servekit/api/gen/go v0.0.0-20260906175858-58f4dd4c6f14 h1:K7bZNNjoVdZdoS3J/OaBRGeU5VsWkqEDxGUpIOV8Uhs=
+github.com/servekit/api/gen/go v0.0.0-20260906175858-58f4dd4c6f14/go.mod h1:eRewFd7DCi0TVeTc/7XgwS6IIKB841UltJ32J5NYcD4=
 github.com/servekit/go-common v0.0.0-20260904101207-39630b2b22cc h1:jefXIjZOQrXHjeUwKU03k1hE5I4YRE+THFVbYzz+Yok=
 github.com/servekit/go-common v0.0.0-20260904101207-39630b2b22cc/go.mod h1:z6VodepIxCJoDyV5enWfUSW8yvkM+EFsftU5eXoPYBc=
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 h1:+jumHNA0Wrelhe64i8F6HNlS8pkoyMv5sreGx2Ry5Rw=

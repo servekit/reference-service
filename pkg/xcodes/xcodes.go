@@ -10,3 +10,6 @@ import "github.com/servekit/go-common/xerr"
 
 // ErrCountryNotFound indicates no country matches the requested alpha-2.
 var ErrCountryNotFound = xerr.New("COUNTRY_NOT_FOUND", xerr.CategoryNotFound, 404, "country not found")
+
+// ErrRegionGroupNotFound indicates no region group matches the requested code.
+var ErrRegionGroupNotFound = xerr.New("REGION_GROUP_NOT_FOUND", xerr.CategoryNotFound, 404, "region group not found")

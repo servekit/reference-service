@@ -40,6 +40,7 @@ const (
 	urlTerritoryContainment = pkgCore + "/supplemental/territoryContainment.json"
 	urlCurrencyData         = pkgCore + "/supplemental/currencyData.json"
 	urlTerritoryInfo        = pkgCore + "/supplemental/territoryInfo.json"
+	urlPrimaryZones         = pkgCore + "/supplemental/primaryZones.json"
 )
 
 // CLDR wraps every main/<locale> file in main.<locale> plus a level keyed by
@@ -127,6 +128,15 @@ type territoryInfoFile struct {
 				OfficialStatus    string `json:"_officialStatus"`
 			} `json:"languagePopulation"`
 		} `json:"territoryInfo"`
+	} `json:"supplemental"`
+}
+
+// primaryZonesFile models CLDR supplemental primaryZones — the handful of
+// countries where CLDR's primary zone differs from zone1970.tab's
+// first-row-for-country rule.
+type primaryZonesFile struct {
+	Supplemental struct {
+		PrimaryZones map[string]string `json:"primaryZones"`
 	} `json:"supplemental"`
 }
 

@@ -59,11 +59,12 @@ func (*Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest) (
 	for _, code := range data.CountryOrder[l] {
 		c := data.Countries[code]
 		out = append(out, &pb.Country{
-			Code:      c.Code,
-			Alpha_3:   c.Alpha3,
-			DialCode:  c.DialCode,
-			FlagEmoji: c.FlagEmoji,
-			Name:      names[code],
+			Code:          c.Code,
+			Alpha_3:       c.Alpha3,
+			DialCode:      c.DialCode,
+			FlagEmoji:     c.FlagEmoji,
+			Name:          names[code],
+			ExampleNumber: c.ExampleNumber,
 		})
 	}
 	return &pb.ListCountriesResponse{Countries: out, DataVersion: data.Version}, nil

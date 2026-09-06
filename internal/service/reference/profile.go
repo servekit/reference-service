@@ -45,11 +45,12 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 
 	resp := &pb.GetCountryProfileResponse{
 		Country: &pb.Country{
-			Code:      c.Code,
-			Alpha_3:   c.Alpha3,
-			DialCode:  c.DialCode,
-			FlagEmoji: c.FlagEmoji,
-			Name:      data.CountryNames[l][code],
+			Code:          c.Code,
+			Alpha_3:       c.Alpha3,
+			DialCode:      c.DialCode,
+			FlagEmoji:     c.FlagEmoji,
+			Name:          data.CountryNames[l][code],
+			ExampleNumber: c.ExampleNumber,
 		},
 		DataVersion: data.Version,
 	}

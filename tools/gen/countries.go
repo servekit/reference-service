@@ -16,7 +16,7 @@ import (
 // countryRow mirrors data.Country (the generator is a standalone main
 // package and cannot import internal/data).
 type countryRow struct {
-	Code, Alpha3, DialCode, FlagEmoji string
+	Code, Alpha3, DialCode, FlagEmoji, ExampleNumber string
 }
 
 // buildCountries emits the country entity table plus per-locale names and
@@ -53,10 +53,11 @@ func buildCountries(cacheDir string) error {
 
 	for code, dial := range dials {
 		entities[code] = countryRow{
-			Code:      code,
-			Alpha3:    alpha3[code],
-			DialCode:  dial,
-			FlagEmoji: flagEmoji(code),
+			Code:          code,
+			Alpha3:        alpha3[code],
+			DialCode:      dial,
+			FlagEmoji:     flagEmoji(code),
+			ExampleNumber: exampleNumber(code),
 		}
 		for _, l := range locales {
 			n := cldrNames[l][code]
@@ -93,8 +94,8 @@ func buildCountries(cacheDir string) error {
 	w.line("var Countries = map[string]Country{")
 	for _, code := range sortedKeys(entities) {
 		c := entities[code]
-		w.line("\t%q: {Code: %q, Alpha3: %q, DialCode: %q, FlagEmoji: %q},",
-			code, c.Code, c.Alpha3, c.DialCode, c.FlagEmoji)
+		w.line("\t%q: {Code: %q, Alpha3: %q, DialCode: %q, FlagEmoji: %q, ExampleNumber: %q},",
+			code, c.Code, c.Alpha3, c.DialCode, c.FlagEmoji, c.ExampleNumber)
 	}
 	w.line("}")
 	w.line("")
@@ -118,6 +119,16 @@ func derivedDials() map[string]string {
 		out[region] = "+" + strconv.Itoa(cc)
 	}
 	return out
+}
+
+// exampleNumber returns the region's libphonenumber example number in
+// international display form ("" when the metadata has none).
+func exampleNumber(region string) string {
+	num := phonenumbers.GetExampleNumber(region)
+	if num == nil {
+		return ""
+	}
+	return phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
 }
 
 // flagEmoji maps alpha-2 to the Unicode regional-indicator pair.

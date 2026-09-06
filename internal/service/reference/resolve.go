@@ -24,11 +24,12 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 	for _, code := range req.GetCountryCodes() {
 		if c, ok := data.Countries[code]; ok {
 			resp.Countries = append(resp.Countries, &pb.Country{
-				Code:      c.Code,
-				Alpha_3:   c.Alpha3,
-				DialCode:  c.DialCode,
-				FlagEmoji: c.FlagEmoji,
-				Name:      data.CountryNames[l][code],
+				Code:          c.Code,
+				Alpha_3:       c.Alpha3,
+				DialCode:      c.DialCode,
+				FlagEmoji:     c.FlagEmoji,
+				Name:          data.CountryNames[l][code],
+				ExampleNumber: c.ExampleNumber,
 			})
 		} else {
 			resp.MissingCountries = append(resp.MissingCountries, code)

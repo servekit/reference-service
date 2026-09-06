@@ -21,10 +21,11 @@ var Locales = []string{
 
 // Country is one row of the country directory (locale-independent fields).
 type Country struct {
-	Code      string // ISO 3166-1 alpha-2
-	Alpha3    string // ISO 3166-1 alpha-3; "" for exceptionally-reserved codes
-	DialCode  string // ITU E.164 with "+", e.g. "+86"
-	FlagEmoji string // regional-indicator pair, e.g. "🇨🇳"
+	Code          string // ISO 3166-1 alpha-2
+	Alpha3        string // ISO 3166-1 alpha-3; "" for exceptionally-reserved codes
+	DialCode      string // ITU E.164 with "+", e.g. "+86"
+	FlagEmoji     string // regional-indicator pair, e.g. "🇨🇳"
+	ExampleNumber string // libphonenumber example, e.g. "+86 138 0013 8000"; "" if none
 }
 
 // Timezone is one canonical IANA zone.
