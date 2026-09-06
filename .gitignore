@@ -44,3 +44,4 @@ go.mod.tmp
 
 # Worktrees
 .worktrees/
+tools/gen/.cache/
