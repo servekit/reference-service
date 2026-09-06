@@ -1,0 +1,18 @@
+# Structure-only config template. Every value is a ${VAR} placeholder expanded
+# by configx (WithExpandEnv) from the process environment at startup; see
+# .env.example for the actual values. To override a value, set the env var in
+# .env (local) or the container/deployment env — never hard-code values here.
+#
+# configx loads ./config.yaml (NOT this file). `make run` copies this template
+# to config.yaml automatically when missing; for docker, the renderer copies it
+# into the image as /app/config.yaml.
+
+server:
+  grpc_addr: ${REFERENCE_SERVICE_SERVER_GRPC_ADDR}
+
+cron:
+  timezone: ${REFERENCE_SERVICE_CRON_TIMEZONE}
+
+log:
+  level: ${REFERENCE_SERVICE_LOG_LEVEL}
+  format: ${REFERENCE_SERVICE_LOG_FORMAT}
