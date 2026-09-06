@@ -39,6 +39,7 @@ func urlCurrencies(locale string) string {
 const (
 	urlTerritoryContainment = pkgCore + "/supplemental/territoryContainment.json"
 	urlCurrencyData         = pkgCore + "/supplemental/currencyData.json"
+	urlTerritoryInfo        = pkgCore + "/supplemental/territoryInfo.json"
 )
 
 // CLDR wraps every main/<locale> file in main.<locale> plus a level keyed by
@@ -113,6 +114,19 @@ type currencyDataFile struct {
 				To   string `json:"_to"`
 			} `json:"region"`
 		} `json:"currencyData"`
+	} `json:"supplemental"`
+}
+
+// territoryInfoFile models CLDR supplemental territoryInfo: per-territory
+// language population with official-status annotations.
+type territoryInfoFile struct {
+	Supplemental struct {
+		TerritoryInfo map[string]struct {
+			LanguagePopulation map[string]struct {
+				PopulationPercent string `json:"_populationPercent"`
+				OfficialStatus    string `json:"_officialStatus"`
+			} `json:"languagePopulation"`
+		} `json:"territoryInfo"`
 	} `json:"supplemental"`
 }
 

@@ -4,7 +4,11 @@
 // each locale's CLDR languages table.
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+	"strconv"
+)
 
 func buildLanguages(cacheDir string) error {
 	var zh, en languagesFile
@@ -67,7 +71,45 @@ func buildLanguages(cacheDir string) error {
 		orders[l] = collatedOrder(l, filtered[l])
 	}
 
-	w := newWriter("CLDR " + cldrVersion + " languages (639-1 set + zh-Hans/zh-Hant)")
+	// Country -> official languages (official + de facto official, most
+	// spoken first), restricted to the directory's tag set.
+	var tif territoryInfoFile
+	if err := getJSON(urlTerritoryInfo, cacheDir, &tif); err != nil {
+		return err
+	}
+	type langPop struct {
+		tag string
+		pct float64
+	}
+	countryLangs := make(map[string][]string)
+	for cc, info := range tif.Supplemental.TerritoryInfo {
+		var picks []langPop
+		for tag, lp := range info.LanguagePopulation {
+			if lp.OfficialStatus != "official" && lp.OfficialStatus != "de_facto_official" {
+				continue // official_regional / minority stay out
+			}
+			if !tags[tag] {
+				continue // not in the served language directory
+			}
+			pct, _ := strconv.ParseFloat(lp.PopulationPercent, 64)
+			picks = append(picks, langPop{tag, pct})
+		}
+		sort.Slice(picks, func(i, j int) bool {
+			if picks[i].pct != picks[j].pct {
+				return picks[i].pct > picks[j].pct
+			}
+			return picks[i].tag < picks[j].tag
+		})
+		if len(picks) > 0 {
+			out := make([]string, len(picks))
+			for i, p := range picks {
+				out[i] = p.tag
+			}
+			countryLangs[cc] = out
+		}
+	}
+
+	w := newWriter("CLDR " + cldrVersion + " languages (639-1 set + zh-Hans/zh-Hant) + territoryInfo official languages")
 	w.line("// Languages is the selectable BCP 47 tag table keyed by tag.")
 	w.line("var Languages = map[string]Language{")
 	for _, tag := range sortedKeys(tags) {
@@ -77,5 +119,13 @@ func buildLanguages(cacheDir string) error {
 	w.line("")
 	w.emitNames("LanguageNames", filtered)
 	w.emitOrder("LanguageOrder", orders)
+	w.line("// CountryLanguages maps alpha-2 -> official languages (official and")
+	w.line("// de facto official only, most-spoken first).")
+	w.line("var CountryLanguages = map[string][]string{")
+	for _, cc := range sortedKeys(countryLangs) {
+		w.line("\t%q: {%s},", cc, quoteJoin(countryLangs[cc]))
+	}
+	w.line("}")
+	w.line("")
 	return w.save(outputPath("languages_data.go"))
 }
