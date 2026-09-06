@@ -16,8 +16,8 @@ formatters:
       simplify: true                 # gofmt -s 简化代码
     goimports:
       local-prefixes:
-        - reference-service
-        - go-common
+        - github.com/servekit/reference-service
+        - github.com/servekit/go-common
 
 linters:
   disable-all: true
@@ -83,7 +83,7 @@ linters:
 
     errcheck:
       check-type-assertions: true    # 类型断言也要检查 ok
-      check-blank: true              # _ = mayFail() 也报错
+      check-blank: false             # _ = cleanup pattern is allowed (align with message-service/CLAUDE.md)
 
     errorlint:
       errorf: true                   # 建议 %w 包装

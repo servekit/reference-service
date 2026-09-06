@@ -6,9 +6,6 @@ package main
 
 import "fmt"
 
-// languageRow mirrors data.Language.
-type languageRow struct{ Tag string }
-
 func buildLanguages(cacheDir string) error {
 	var zh, en languagesFile
 	if err := getJSON(urlLanguages("zh-Hans"), cacheDir, &zh); err != nil {
@@ -73,7 +70,7 @@ func buildLanguages(cacheDir string) error {
 	w := newWriter("CLDR " + cldrVersion + " languages (639-1 set + zh-Hans/zh-Hant)")
 	w.line("// Languages is the selectable BCP 47 tag table keyed by tag.")
 	w.line("var Languages = map[string]Language{")
-	for _, tag := range sortedKeys(map[string]bool(tags)) {
+	for _, tag := range sortedKeys(tags) {
 		w.line("\t%q: {Tag: %q},", tag, tag)
 	}
 	w.line("}")

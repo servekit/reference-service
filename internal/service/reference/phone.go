@@ -1,7 +1,8 @@
-// phone.go — ParsePhone: libphonenumber rules as a deterministic pure
+// ParsePhone: libphonenumber rules as a deterministic pure
 // function (the metadata ships with the nyaruka dependency). Bad input
 // never fails the RPC; is_valid=false + error_reason carries the reason and
 // inferable fields are still filled.
+
 package reference
 
 import (
@@ -12,12 +13,15 @@ import (
 	"github.com/nyaruka/phonenumbers"
 
 	pb "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/data"
 )
 
-func (s *Service) ParsePhone(_ context.Context, req *pb.ParsePhoneRequest) (*pb.ParsePhoneResponse, error) {
+// ParsePhone applies libphonenumber rules; bad input reports is_valid=false.
+func (*Service) ParsePhone(_ context.Context, req *pb.ParsePhoneRequest) (*pb.ParsePhoneResponse, error) {
 	num, err := phonenumbers.Parse(strings.TrimSpace(req.GetRaw()), req.GetDefaultRegion())
 	if err != nil {
+		//nolint:nilerr // a parse failure is a valid response (is_valid=false), not an RPC error
 		return &pb.ParsePhoneResponse{IsValid: false, ErrorReason: err.Error()}, nil
 	}
 	resp := &pb.ParsePhoneResponse{

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	pb "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/data"
 	"github.com/servekit/reference-service/pkg/config"
 

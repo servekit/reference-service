@@ -15,6 +15,7 @@ import (
 
 	commonv1 "github.com/servekit/api/gen/go/common/v1"
 	referencev1 "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/service"
 
 	"google.golang.org/protobuf/types/known/emptypb"

@@ -119,6 +119,6 @@ func flagEmoji(code string) string {
 	if len(code) != 2 {
 		return ""
 	}
-	r := func(b byte) rune { return rune(0x1F1E6 + rune(b-'A')) }
+	r := func(b byte) rune { return rune(0x1F1E6) + rune(b-'A') }
 	return string(r(code[0])) + string(r(code[1]))
 }

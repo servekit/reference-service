@@ -1,4 +1,4 @@
-.PHONY: all build build-dev run test lint fmt vet proto tidy regenerate
+.PHONY: all build build-dev run test lint fmt vet proto tidy regenerate data
 
 # Published binary name. Override to ship under a different name without
 # touching the source tree, e.g. `make build BIN_NAME=msgsvc`.
@@ -12,7 +12,7 @@ VERSION   ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo de
 COMMIT    ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BRANCH    ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
 BUILDTIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-VERSION_PKG := reference-service/internal/version
+VERSION_PKG := github.com/servekit/reference-service/internal/version
 # LDFLAGS strips symbol table (-s) and DWARF (-w) and injects version info;
 # GOFLAGS trims local file paths for a smaller, reproducible production binary.
 # Use `make build-dev` when you need dlv-debuggable binaries or full panic stack traces.
@@ -30,6 +30,13 @@ build:
 ## build-dev: Build without -s -w -trimpath (for debugging)
 build-dev:
 	go build -o bin/$(BIN_NAME) ./$(CMD_DIR)/
+
+## data: Regenerate internal/data/*_data.go from pinned upstreams (CLDR 45
+## via unpkg, ISO 3166, IANA tzdb). Needs network on first run; responses
+## are cached under tools/gen/.cache (gitignored). Review the diff, PR, release.
+data:
+	go run ./tools/gen -out ./internal/data
+	gofmt -w ./internal/data
 
 ## run: Run the server locally (auto-copies config.example.yaml -> config.yaml if missing)
 run:

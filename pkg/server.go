@@ -15,6 +15,7 @@ import (
 	"github.com/servekit/go-common/signalx"
 
 	referencev1 "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/service"
 	"github.com/servekit/reference-service/pkg/config"
 	"github.com/servekit/reference-service/pkg/handler"

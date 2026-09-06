@@ -26,7 +26,6 @@ func buildTimezones(cacheDir string) error {
 	}
 
 	entities := make(map[string]tzRow)
-	var orderSeed []string
 	for _, line := range strings.Split(string(tab), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -43,7 +42,6 @@ func buildTimezones(cacheDir string) error {
 		}
 		codes := strings.Split(fields[0], ",")
 		entities[id] = tzRow{ID: id, CountryCodes: codes}
-		orderSeed = append(orderSeed, id)
 	}
 
 	// Backward links: "Link <target> <alias>". Targets may themselves be

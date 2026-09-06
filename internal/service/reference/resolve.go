@@ -1,8 +1,9 @@
-// resolve.go — ResolveCodes: the batch by-code lookup across domains. One
+// ResolveCodes: the batch by-code lookup across domains. One
 // call serves a registration form's validate-and-fetch; unknown codes land
 // in missing_* and never fail the call. Timezone ids accept backward
 // aliases (normalized to canonical); language tags are case-canonicalized
 // via x/text before lookup.
+
 package reference
 
 import (
@@ -11,10 +12,12 @@ import (
 	"golang.org/x/text/language"
 
 	pb "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/data"
 )
 
-func (s *Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*pb.ResolveCodesResponse, error) {
+// ResolveCodes batch-resolves codes across domains; misses land in missing_*.
+func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*pb.ResolveCodesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	resp := &pb.ResolveCodesResponse{DataVersion: data.Version}
 

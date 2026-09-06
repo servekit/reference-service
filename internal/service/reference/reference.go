@@ -12,6 +12,7 @@ import (
 	"golang.org/x/text/language"
 
 	pb "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/data"
 )
 
@@ -50,7 +51,8 @@ type Service struct{}
 // New constructs the reference domain service.
 func New() *Service { return &Service{} }
 
-func (s *Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest) (*pb.ListCountriesResponse, error) {
+// ListCountries returns the full country directory in the request locale.
+func (*Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest) (*pb.ListCountriesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	names := data.CountryNames[l]
 	out := make([]*pb.Country, 0, len(data.CountryOrder[l]))
@@ -67,7 +69,8 @@ func (s *Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest)
 	return &pb.ListCountriesResponse{Countries: out, DataVersion: data.Version}, nil
 }
 
-func (s *Service) ListTimezones(_ context.Context, req *pb.ListTimezonesRequest) (*pb.ListTimezonesResponse, error) {
+// ListTimezones returns the canonical IANA zones in the request locale.
+func (*Service) ListTimezones(_ context.Context, req *pb.ListTimezonesRequest) (*pb.ListTimezonesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	names := data.TimezoneNames[l]
 	out := make([]*pb.Timezone, 0, len(data.TimezoneOrder[l]))
@@ -83,7 +86,8 @@ func (s *Service) ListTimezones(_ context.Context, req *pb.ListTimezonesRequest)
 	return &pb.ListTimezonesResponse{Timezones: out, DataVersion: data.Version}, nil
 }
 
-func (s *Service) ListLanguages(_ context.Context, req *pb.ListLanguagesRequest) (*pb.ListLanguagesResponse, error) {
+// ListLanguages returns the selectable BCP 47 tags in the request locale.
+func (*Service) ListLanguages(_ context.Context, req *pb.ListLanguagesRequest) (*pb.ListLanguagesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	names := data.LanguageNames[l]
 	out := make([]*pb.Language, 0, len(data.LanguageOrder[l]))
@@ -93,7 +97,8 @@ func (s *Service) ListLanguages(_ context.Context, req *pb.ListLanguagesRequest)
 	return &pb.ListLanguagesResponse{Languages: out, DataVersion: data.Version}, nil
 }
 
-func (s *Service) ListCurrencies(_ context.Context, req *pb.ListCurrenciesRequest) (*pb.ListCurrenciesResponse, error) {
+// ListCurrencies returns the ISO 4217 active set in the request locale.
+func (*Service) ListCurrencies(_ context.Context, req *pb.ListCurrenciesRequest) (*pb.ListCurrenciesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	names := data.CurrencyNames[l]
 	out := make([]*pb.Currency, 0, len(data.CurrencyOrder[l]))
@@ -110,7 +115,8 @@ func (s *Service) ListCurrencies(_ context.Context, req *pb.ListCurrenciesReques
 	return &pb.ListCurrenciesResponse{Currencies: out, DataVersion: data.Version}, nil
 }
 
-func (s *Service) ListRegionGroups(_ context.Context, req *pb.ListRegionGroupsRequest) (*pb.ListRegionGroupsResponse, error) {
+// ListRegionGroups returns the UN M49 hierarchy (continents first).
+func (*Service) ListRegionGroups(_ context.Context, req *pb.ListRegionGroupsRequest) (*pb.ListRegionGroupsResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	names := data.RegionGroupNames[l]
 	out := make([]*pb.RegionGroup, 0, len(data.RegionGroupOrder[l]))

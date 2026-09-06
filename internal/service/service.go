@@ -19,12 +19,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	commonv1 "github.com/servekit/api/gen/go/common/v1"
 	referencev1 "github.com/servekit/api/gen/go/reference/v1"
+
 	"github.com/servekit/reference-service/internal/jobs"
 	"github.com/servekit/reference-service/internal/service/reference"
 	"github.com/servekit/reference-service/internal/version"
-	"time"
 
 	"github.com/servekit/reference-service/pkg/config"
 	"github.com/servekit/reference-service/pkg/option"
@@ -96,7 +98,7 @@ func (s *Service) Stop() error { return s.mgr.Stop() }
 // Ping is a health-check RPC, always generated so gRPC clients have a
 // uniform liveness probe. Returns only public, non-sensitive info — never
 // internal addresses, env, secrets, or dependency topology.
-func (s *Service) Ping(ctx context.Context) (*commonv1.Pong, error) {
+func (s *Service) Ping(_ context.Context) (*commonv1.Pong, error) {
 	v := version.Get()
 	return &commonv1.Pong{
 		Service:   "reference-service",
