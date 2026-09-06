@@ -12,7 +12,7 @@
 #   reference-service/      service path prefix relative to build context, or empty
 #   ./cmd/server         main package passed to go build
 #   reference-service        output binary name
-#   9000        grpcx gRPC listen port
+#   19094       grpcx gRPC listen port
 #             optional grpc-gateway listen port
 #   config.example.yaml      non-secret config template copied as /app/config.yaml
 
@@ -74,5 +74,5 @@ COPY --from=grpc-health-probe /ko-app/grpc-health-probe /usr/local/bin/grpc_heal
 COPY reference-service/config.example.yaml /app/config.yaml
 
 USER appuser
-EXPOSE 9000
+EXPOSE 19094
 ENTRYPOINT ["/app/reference-service"]
