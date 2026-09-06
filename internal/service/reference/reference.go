@@ -110,6 +110,7 @@ func (*Service) ListCurrencies(_ context.Context, req *pb.ListCurrenciesRequest)
 			MinorUnits:   c.MinorUnits,
 			CountryCodes: c.CountryCodes,
 			Name:         names[code],
+			FlagEmoji:    c.FlagEmoji,
 		})
 	}
 	return &pb.ListCurrenciesResponse{Currencies: out, DataVersion: data.Version}, nil

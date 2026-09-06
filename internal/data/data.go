@@ -45,6 +45,7 @@ type Currency struct {
 	Symbol       string
 	MinorUnits   int32
 	CountryCodes []string // regions where currently valid
+	FlagEmoji    string   // issuer flag; "" when no country backs the code (XDR)
 }
 
 // RegionGroup is one UN M49 node; top level (ParentCode == "") is a

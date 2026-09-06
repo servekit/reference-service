@@ -83,6 +83,7 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 				MinorUnits:   c.MinorUnits,
 				CountryCodes: c.CountryCodes,
 				Name:         data.CurrencyNames[l][code],
+				FlagEmoji:    c.FlagEmoji,
 			})
 		} else {
 			resp.MissingCurrencies = append(resp.MissingCurrencies, code)

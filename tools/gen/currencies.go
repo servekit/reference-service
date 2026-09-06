@@ -15,13 +15,28 @@ type currencyRow struct {
 	Symbol       string
 	MinorUnits   int32
 	CountryCodes []string
+	FlagEmoji    string
 }
+
+// Issuer-territory knowledge for flag derivation, assembled once in
+// buildCurrencies: the English CLDR territory table (covers
+// exceptionally-reserved issuers like EU) plus the dialing-region set.
+var (
+	enTerritoryNames map[string]string
+	dialRegions      map[string]string
+)
 
 func buildCurrencies(cacheDir string) error {
 	var cd currencyDataFile
 	if err := getJSON(urlCurrencyData, cacheDir, &cd); err != nil {
 		return err
 	}
+	var tf territoriesFile
+	if err := getJSON(urlTerritories("en"), cacheDir, &tf); err != nil {
+		return err
+	}
+	enTerritoryNames = sole(tf.Main).LocaleDisplayNames.Territories
+	dialRegions = derivedDials()
 	fractions := cd.Supplemental.CurrencyData.Fractions
 	regions := cd.Supplemental.CurrencyData.Region
 
@@ -77,7 +92,12 @@ func buildCurrencies(cacheDir string) error {
 		}
 		regs := u.regs
 		sort.Strings(regs)
-		entities[code] = currencyRow{Code: code, MinorUnits: digits, CountryCodes: regs}
+		entities[code] = currencyRow{
+			Code:         code,
+			MinorUnits:   digits,
+			CountryCodes: regs,
+			FlagEmoji:    currencyFlag(code, regs),
+		}
 	}
 
 	// Names + symbols; every locale names every code, falling back to
@@ -113,8 +133,8 @@ func buildCurrencies(cacheDir string) error {
 	w.line("var Currencies = map[string]Currency{")
 	for _, code := range sortedKeys(entities) {
 		e := entities[code]
-		w.line("\t%q: {Code: %q, Symbol: %q, MinorUnits: %d, CountryCodes: []string{%s}},",
-			code, e.Code, e.Symbol, e.MinorUnits, quoteJoin(e.CountryCodes))
+		w.line("\t%q: {Code: %q, Symbol: %q, MinorUnits: %d, CountryCodes: []string{%s}, FlagEmoji: %q},",
+			code, e.Code, e.Symbol, e.MinorUnits, quoteJoin(e.CountryCodes), e.FlagEmoji)
 	}
 	w.line("}")
 	w.line("")
@@ -128,6 +148,24 @@ func firstNonEmpty(ss ...string) string {
 		if s != "" {
 			return s
 		}
+	}
+	return ""
+}
+
+// currencyFlag derives the issuer flag. ISO 4217 alpha-3 codes embed the
+// issuing authority's alpha-2 in their first two letters (CNY -> CN, EUR ->
+// the exceptionally-reserved EU, which renders as the EU flag); that pair
+// is the flag when it is a known territory. X-prefixed multi-country codes
+// (XOF/XAF/XCD/XPF) take their first member; country-less codes (XDR, the
+// metal units) stay empty.
+func currencyFlag(code string, members []string) string {
+	head := code[:2]
+	if head == "EU" || dialRegions[head] != "" ||
+		enTerritoryNames[head] != "" || enTerritoryNames[head+"-alt-short"] != "" {
+		return flagEmoji(head)
+	}
+	if len(members) > 0 {
+		return flagEmoji(members[0])
 	}
 	return ""
 }
