@@ -9,4 +9,3 @@ package service
 // lifecycle; otherwise it is built from cfg via the provider's Connect
 // (dbx/redisx for resources, the dependency's pkg.Connect for services),
 // which also registers its lifecycle with the Manager.
-

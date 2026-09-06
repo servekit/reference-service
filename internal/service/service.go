@@ -19,11 +19,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 	commonv1 "github.com/servekit/api/gen/go/common/v1"
 	"github.com/servekit/reference-service/internal/jobs"
 	"github.com/servekit/reference-service/internal/version"
-	
+	"time"
+
 	"github.com/servekit/reference-service/pkg/config"
 	"github.com/servekit/reference-service/pkg/option"
 
@@ -40,7 +40,6 @@ import (
 type Service struct {
 	cfg *config.Config
 	mgr *lifecycle.Manager
-	
 
 	// startedAt is set once in New; Ping returns it for uptime.
 	startedAt int64
@@ -59,14 +58,14 @@ func New(cfg *config.Config, opts ...option.Option) (*Service, error) {
 	o := option.Apply(opts...)
 	mgr := lifecycle.NewManager()
 	_ = o // no resources enabled; o kept for the injection seam
-	
+
 	// jobs.Scheduler owns the cron instance; setupJobs builds it, registers
 	// it on mgr, and wires periodic jobs (empty by default — add jobs inside
 	// setupJobs as scheduler.AddFunc calls). See architecture.md (jobs.md).
 	svc := &Service{
 		cfg: cfg,
 		mgr: mgr,
-		
+
 		startedAt: time.Now().UnixMilli(),
 	}
 
@@ -103,7 +102,7 @@ func (s *Service) Ping(ctx context.Context) (*commonv1.Pong, error) {
 		StartedAt: s.startedAt,
 	}, nil
 }
-	
+
 // Resource resolve helpers (resolveDB / resolveRedis)
 // live in helper.go — extracted from this file to keep service.go focused on
 // the Service struct, New/Start/Stop/Ping, and the facade delegations.
