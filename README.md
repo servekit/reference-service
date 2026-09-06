@@ -31,7 +31,9 @@
 make data   # 从 pinned 上游重生成 internal/data/*_data.go（首次需联网，结果缓存 .cache/）
 ```
 
-上游：CLDR 45.0.0（unpkg 分包 localenames/dates/numbers/core）、lukes ISO 3166（alpha-3）、IANA `zone1970.tab` + `backward`、libphonenumber 元数据（随 `nyaruka/phonenumbers` 依赖走）。国家表的 zh/en 名称与收录集来自 message-service 原区号表的一次性转写（迁移零差异保证，见 `tools/gen/seed_countries.go`）。更新流程：`make data` → review diff → PR → 发版。
+上游：**nyaruka/phonenumbers 元数据**（国家条目集与区号——与 `ParsePhone` 同一份元数据，升级依赖后 `make data` 即同步再生，目录与解析规则永不脱节）、CLDR 45.0.0（unpkg 分包，全部 11 语言的名称）、lukes ISO 3166（alpha-3）、IANA `zone1970.tab` + `backward`。更新流程：`make data` → review diff → PR → 发版。
+
+> 历史注记：迁移期的区号种子表（自 message-service 一次性转写，保证当时前端数据零差异）已于切换到 nyaruka 推导后删除；切换前对拍确认五项零差异（条目/区号/中英名）。
 
 ## 构建与运行
 

@@ -65,9 +65,10 @@ func buildRegionGroups(cacheDir string) error {
 		}
 		return len(code) == 3
 	}
-	seedSet := make(map[string]bool, len(seedCountries))
-	for _, s := range seedCountries {
-		seedSet[s.Code] = true
+	// Country members must exist in the country domain — same source.
+	seedSet := make(map[string]bool, len(derivedDials()))
+	for code := range derivedDials() {
+		seedSet[code] = true
 	}
 
 	var groups []string
