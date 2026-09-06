@@ -30,6 +30,8 @@ func main() {
 		fn   func(string) error
 	}{
 		{"countries", buildCountries},
+		{"timezones", buildTimezones},
+		{"languages", buildLanguages},
 	}
 	for _, s := range steps {
 		if err := s.fn(cache); err != nil {
