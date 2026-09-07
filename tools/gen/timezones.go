@@ -26,6 +26,31 @@ func buildTimezones(cacheDir string) error {
 	}
 
 	entities := make(map[string]tzRow)
+	// Backward links: "Link <target> <alias>". Targets may themselves be
+	// links; resolve transitively to a canonical zone. Parsed FIRST so the
+	// CLDR primaryZones overlay below can resolve historic zone names
+	// (Europe/Kiev) to their canonical ids (Europe/Kyiv).
+	aliases := make(map[string]string)
+	for _, line := range strings.Split(string(back), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) != 3 || fields[0] != "Link" {
+			continue
+		}
+		target, alias := fields[1], fields[2]
+		for hop := 0; hop < 5; hop++ {
+			next, isLink := aliases[target]
+			if !isLink {
+				break
+			}
+			target = next
+		}
+		aliases[alias] = target
+	}
+
 	// zone1970.tab sorts by country code and puts each country's most
 	// populous zone first — so the FIRST row mentioning a country is its
 	// primary zone (the rule CLDR itself uses; primaryZones.json lists the
@@ -54,14 +79,27 @@ func buildTimezones(cacheDir string) error {
 		entities[id] = tzRow{ID: id, CountryCodes: codes}
 	}
 
+	// CLDR exceptions are authoritative — but CLDR still spells some with
+	// historic (now alias) names: "UA": "Europe/Kiev" while tzdb renamed the
+	// zone to Europe/Kyiv. Resolve through the backward-link table before
+	// applying, otherwise the overlay silently no-ops and UA's primary stays
+	// the first-row pick — Europe/Simferopol (the RU,UA row sorts first).
 	var pz primaryZonesFile
 	if err := getJSON(urlPrimaryZones, cacheDir, &pz); err != nil {
 		return err
 	}
 	for cc, zone := range pz.Supplemental.PrimaryZones {
-		if _, ok := entities[zone]; ok {
-			primary[cc] = zone // CLDR exceptions are authoritative
+		if _, ok := entities[zone]; !ok {
+			canon, isAlias := aliases[zone]
+			if !isAlias {
+				continue
+			}
+			if _, ok := entities[canon]; !ok {
+				continue
+			}
+			zone = canon
 		}
+		primary[cc] = zone
 	}
 
 	// Neither zone1970.tab nor zone.tab orders a country's zones by
@@ -78,32 +116,27 @@ func buildTimezones(cacheDir string) error {
 	}
 
 	// Curated inheritance for regions tzdb deliberately carries no rows
-	// for. Two different mechanisms, on purpose:
-	//
-	// 1) Membership mirror (AC, TA). IANA models St Helena as a backward
-	//    Link Atlantic/St_Helena -> Africa/Abidjan (both UTC+0 forever), and
-	//    the zone1970.tab row accordingly lists SH among Africa/Abidjan's
-	//    country codes. Ascension and Tristan da Cunha share that
-	//    administered territory and the same UTC+0 offset, but tzdb tracks
-	//    no separate rows for them. Mirroring SH's zone membership adds
-	//    AC/TA to the same row (exactly where tzdb itself would list them
-	//    if it modeled the islands) — so both the zone's country list and
-	//    the per-country defaults resolve.
-	//
-	// 2) Defaults-only inheritance (XK). Kosovo observes the same time as
-	//    Serbia (UTC+1/+2, Europe/Belgrade rules) but is a distinct
-	//    polity; tzdb intentionally has no zone for it and RS's zone rows
-	//    do not list XK. Point the defaults map at Europe/Belgrade WITHOUT
-	//    touching the zone's country membership, keeping the timezone
-	//    directory IANA-faithful while GetCountryDefaults still answers.
-	mirrorZoneMembers := map[string]string{
-		"AC": "SH", // Ascension Island -> Saint Helena's zone (Africa/Abidjan)
-		"TA": "SH", // Tristan da Cunha -> Saint Helena's zone (Africa/Abidjan)
+	// for. Membership mirror, not defaults-only: IANA models St Helena as a
+	// backward Link Atlantic/St_Helena -> Africa/Abidjan (both UTC+0
+	// forever), and the zone1970.tab row accordingly lists SH among
+	// Africa/Abidjan's country codes. Ascension and Tristan da Cunha share
+	// that administered territory and the same UTC+0 offset, but tzdb
+	// tracks no separate rows for them — mirroring SH's zone membership
+	// adds AC/TA to the same row, exactly where tzdb itself would list
+	// them. Kosovo (XK) observes Europe/Belgrade time (UTC+1/+2) and tzdb
+	// has no zone for it; it is mirrored into Belgrade the same way so
+	// GetCountryProfile and the zone's country list agree (a
+	// defaults-only pointer left profile.timezones empty for XK, which
+	// read as an inconsistency). Both mirrors deviate from strict IANA
+	// membership, documented here and in the emitted header.
+	zoneMirrors := map[string]string{
+		"AC": "Africa/Abidjan",   // via Saint Helena's zone (UTC+0)
+		"TA": "Africa/Abidjan",   // via Saint Helena's zone (UTC+0)
+		"XK": "Europe/Belgrade",  // Kosovo keeps Belgrade time (UTC+1/+2)
 	}
-	for cc, parent := range mirrorZoneMembers {
-		zone, ok := primary[parent]
-		if !ok {
-			return fmt.Errorf("mirror: no primary zone for %s", parent)
+	for cc, zone := range zoneMirrors {
+		if _, ok := entities[zone]; !ok {
+			return fmt.Errorf("mirror zone %s for %s is not canonical", zone, cc)
 		}
 		row := entities[zone]
 		if !containsStrTZ(row.CountryCodes, cc) {
@@ -112,38 +145,27 @@ func buildTimezones(cacheDir string) error {
 		entities[zone] = row
 		primary[cc] = zone
 	}
-	defaultZoneInheritance := map[string]string{
-		"XK": "Europe/Belgrade", // Kosovo keeps Belgrade time (UTC+1/+2)
-	}
-	for cc, zone := range defaultZoneInheritance {
-		if _, ok := entities[zone]; !ok {
-			return fmt.Errorf("inherited default zone %s for %s is not canonical", zone, cc)
+
+	// The country domain serves dialing regions only (245); tzdb and CLDR
+	// carry more territories (AQ, GS, PN, TF, UM, ...). Drop them from the
+	// emitted membership lists and primary map so no table references a
+	// code ListCountries cannot resolve (the rule regions.go always had).
+	for id, row := range entities {
+		kept := row.CountryCodes[:0]
+		for _, cc := range row.CountryCodes {
+			if servedCountries[cc] {
+				kept = append(kept, cc)
+			}
 		}
-		primary[cc] = zone
+		row.CountryCodes = kept
+		entities[id] = row
+	}
+	for cc := range primary {
+		if !servedCountries[cc] {
+			delete(primary, cc)
+		}
 	}
 
-	// Backward links: "Link <target> <alias>". Targets may themselves be
-	// links; resolve transitively to a canonical zone.
-	aliases := make(map[string]string)
-	for _, line := range strings.Split(string(back), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		fields := strings.Fields(line)
-		if len(fields) != 3 || fields[0] != "Link" {
-			continue
-		}
-		target, alias := fields[1], fields[2]
-		for hop := 0; hop < 5; hop++ {
-			next, isLink := aliases[target]
-			if !isLink {
-				break
-			}
-			target = next
-		}
-		aliases[alias] = target
-	}
 	for alias, target := range aliases {
 		row, ok := entities[target]
 		if !ok {
@@ -234,7 +256,7 @@ func buildTimezones(cacheDir string) error {
 		orders[l] = collatedOrder(l, names[l])
 	}
 
-	w := newWriter("IANA zone1970.tab + tz backward links + CLDR " + cldrVersion + " exemplar cities")
+	w := newWriter("IANA zone1970.tab (tz 2026c) + tz backward links + CLDR " + cldrVersion + " exemplar cities; AC/TA/XK mirrored into their observed zones (see tools/gen/timezones.go)")
 	w.line("// Timezones is the canonical zone table keyed by IANA id.")
 	w.line("var Timezones = map[string]Timezone{")
 	for _, id := range sortedKeys(entities) {

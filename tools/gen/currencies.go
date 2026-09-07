@@ -92,6 +92,16 @@ func buildCurrencies(cacheDir string) error {
 		}
 		regs := u.regs
 		sort.Strings(regs)
+		// CLDR region validity covers territories beyond the dialing-region
+		// country domain (EA/IC/TF/...); keep only served codes so no
+		// currency row references a country ListCountries cannot resolve.
+		kept := regs[:0]
+		for _, cc := range regs {
+			if servedCountries[cc] {
+				kept = append(kept, cc)
+			}
+		}
+		regs = kept
 		entities[code] = currencyRow{
 			Code:         code,
 			MinorUnits:   digits,

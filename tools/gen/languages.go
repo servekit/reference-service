@@ -8,7 +8,19 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 )
+
+// servedCountries is the country-domain key set (the dialing regions) —
+// every country-code list the generators emit is filtered against it so
+// the shipped tables never reference a code ListCountries cannot resolve.
+var servedCountries = func() map[string]bool {
+	set := make(map[string]bool, len(derivedDials()))
+	for cc := range derivedDials() {
+		set[cc] = true
+	}
+	return set
+}()
 
 func buildLanguages(cacheDir string) error {
 	var zh, en languagesFile
@@ -83,8 +95,16 @@ func buildLanguages(cacheDir string) error {
 	}
 	countryLangs := make(map[string][]string)
 	for cc, info := range tif.Supplemental.TerritoryInfo {
+		if _, served := servedCountries[cc]; !served {
+			continue // not in the country directory — same rule as regions.go
+		}
 		var picks, byPopulation []langPop
 		for tag, lp := range info.LanguagePopulation {
+			// territoryInfo spells script/region suffixes with underscores
+			// (zh_Hant, pt_BR); the served tag set is BCP 47 hyphenated.
+			// Without this normalization zh_Hant never matched and TW/HK/MO
+			// silently lost their official Chinese.
+			tag = strings.ReplaceAll(tag, "_", "-")
 			if !tags[tag] {
 				continue // not in the served language directory
 			}
