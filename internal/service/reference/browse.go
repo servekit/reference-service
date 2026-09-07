@@ -18,19 +18,19 @@ import (
 // ListCountriesByRegion returns every country under a region group,
 // recursively, in the request locale's country collation order.
 func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesByRegionRequest) (*pb.ListCountriesByRegionResponse, error) {
-	code := req.GetRegionCode()
-	if _, ok := data.RegionGroups[code]; !ok {
-		return nil, xcodes.ErrRegionGroupNotFound.Wrapf(nil, "region group %s", code)
+	group := req.GetGroupCode()
+	if _, ok := data.RegionGroups[group]; !ok {
+		return nil, xcodes.ErrRegionGroupNotFound.Wrapf(nil, "region group %s", group)
 	}
 	l := resolveLocale(req.GetLocale())
 
 	// Subtree: the group plus every group descending from it. The walk is
 	// bounded by the group count — generated data is acyclic (tested), the
 	// bound only keeps a future data regression from hanging the RPC.
-	inSubtree := map[string]bool{code: true}
+	inSubtree := map[string]bool{group: true}
 	for g, rg := range data.RegionGroups {
 		for i, cur := 0, rg.ParentCode; cur != "" && i <= len(data.RegionGroups); i, cur = i+1, data.RegionGroups[cur].ParentCode {
-			if cur == code {
+			if cur == group {
 				inSubtree[g] = true
 				break
 			}
@@ -38,7 +38,7 @@ func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesBy
 	}
 	countrySet := map[string]bool{}
 	for g := range inSubtree {
-		for _, cc := range data.RegionGroups[g].CountryCodes {
+		for _, cc := range data.RegionGroups[g].RegionCodes {
 			countrySet[cc] = true
 		}
 	}
@@ -55,7 +55,7 @@ func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesBy
 
 // GetCountryDefaults returns the auto-fill set for one country.
 func (*Service) GetCountryDefaults(_ context.Context, req *pb.GetCountryDefaultsRequest) (*pb.GetCountryDefaultsResponse, error) {
-	code := req.GetCountryCode()
+	code := req.GetRegionCode()
 	c, ok := data.Countries[code]
 	if !ok {
 		return nil, xcodes.ErrCountryNotFound.Wrapf(nil, "country %s", code)
@@ -75,7 +75,7 @@ func (*Service) GetCountryDefaults(_ context.Context, req *pb.GetCountryDefaults
 		resp.TimezoneName = data.TimezoneNames[l][tzID]
 	} else {
 		for _, id := range data.TimezoneOrder[l] {
-			if containsStr(data.Timezones[id].CountryCodes, code) {
+			if containsStr(data.Timezones[id].RegionCodes, code) {
 				resp.TimezoneId = id
 				resp.TimezoneName = data.TimezoneNames[l][id]
 				break
@@ -86,7 +86,7 @@ func (*Service) GetCountryDefaults(_ context.Context, req *pb.GetCountryDefaults
 	// Default currency: the first currently-valid currency in the locale's
 	// order (deterministic; CNY sorts before CNH for zh locales).
 	for _, cur := range data.CurrencyOrder[l] {
-		if containsStr(data.Currencies[cur].CountryCodes, code) {
+		if containsStr(data.Currencies[cur].RegionCodes, code) {
 			resp.CurrencyCode = cur
 			resp.CurrencyName = data.CurrencyNames[l][cur]
 			resp.CurrencySymbol = data.Currencies[cur].Symbol
@@ -107,7 +107,7 @@ func (*Service) GetDataInfo(_ context.Context, _ *pb.GetDataInfoRequest) (*pb.Ge
 	return &pb.GetDataInfoResponse{
 		DataVersion:      data.Version,
 		Locales:          data.Locales,
-		CountryCount:     int32(len(data.Countries)),
+		RegionCount:      int32(len(data.Countries)),
 		TimezoneCount:    int32(len(data.Timezones)),
 		LanguageCount:    int32(len(data.Languages)),
 		CurrencyCount:    int32(len(data.Currencies)),

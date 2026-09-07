@@ -32,7 +32,7 @@ func TestCurrenciesIntegrity(t *testing.T) {
 }
 
 func TestCurrenciesGoldenRows(t *testing.T) {
-	if c := Currencies["CNY"]; c.Symbol != "¥" || c.MinorUnits != 2 || !contains(c.CountryCodes, "CN") {
+	if c := Currencies["CNY"]; c.Symbol != "¥" || c.MinorUnits != 2 || !contains(c.RegionCodes, "CN") {
 		t.Errorf("CNY row wrong: %+v", c)
 	}
 	// Narrow symbols — one glyph, no disambiguation letters (the code column

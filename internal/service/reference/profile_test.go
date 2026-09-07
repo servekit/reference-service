@@ -19,7 +19,7 @@ func codes(gs []*pb.RegionGroup) []string {
 
 func TestGetCountryProfileCN(t *testing.T) {
 	s := New()
-	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "CN"})
+	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "CN"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestGetCountryProfileCN(t *testing.T) {
 
 func TestGetCountryProfileUSLocaleEN(t *testing.T) {
 	s := New()
-	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "US", Locale: "en"})
+	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "US", Locale: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestGetCountryProfileUSLocaleEN(t *testing.T) {
 
 func TestGetCountryProfileCHFourOfficial(t *testing.T) {
 	s := New()
-	resp, _ := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "CH"})
+	resp, _ := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "CH"})
 	tags := make([]string, 0, len(resp.GetLanguages()))
 	for _, l := range resp.GetLanguages() {
 		tags = append(tags, l.GetTag())
@@ -85,7 +85,7 @@ func TestGetCountryProfileCHFourOfficial(t *testing.T) {
 
 func TestGetCountryProfileNotFound(t *testing.T) {
 	s := New()
-	_, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "ZZ"})
+	_, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "ZZ"})
 	if err == nil {
 		t.Fatal("expected not-found error")
 	}
@@ -98,7 +98,7 @@ func TestGetCountryProfileNotFound(t *testing.T) {
 // from SH (Africa/Abidjan — tzdb links Atlantic/St_Helena there).
 func TestGetCountryProfileAC(t *testing.T) {
 	s := New()
-	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "AC"})
+	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "AC"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,14 +121,14 @@ func TestGetCountryProfileAC(t *testing.T) {
 	// Defaults resolve through the same enrichment; XK is mirrored into
 	// Europe/Belgrade's membership (not defaults-only), so its profile
 	// lists the zone too.
-	d, err := s.GetCountryDefaults(context.Background(), &pb.GetCountryDefaultsRequest{CountryCode: "XK"})
+	d, err := s.GetCountryDefaults(context.Background(), &pb.GetCountryDefaultsRequest{RegionCode: "XK"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if d.GetTimezoneId() != "Europe/Belgrade" {
 		t.Fatalf("XK default timezone = %q, want Europe/Belgrade", d.GetTimezoneId())
 	}
-	pk, _ := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "XK"})
+	pk, _ := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{RegionCode: "XK"})
 	if len(pk.GetTimezones()) != 1 || pk.GetTimezones()[0].GetId() != "Europe/Belgrade" {
 		t.Fatalf("XK profile timezones = %+v, want [Europe/Belgrade]", pk.GetTimezones())
 	}

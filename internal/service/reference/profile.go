@@ -18,7 +18,7 @@ import (
 
 // GetCountryProfile returns everything the domains know about one country.
 func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRequest) (*pb.GetCountryProfileResponse, error) {
-	code := req.GetCountryCode()
+	code := req.GetRegionCode()
 	c, ok := data.Countries[code]
 	if !ok {
 		return nil, xcodes.ErrCountryNotFound.Wrapf(nil, "country %s", code)
@@ -33,7 +33,7 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	// regression hanging the RPC.
 	chainSet := map[string]bool{}
 	for gCode, g := range data.RegionGroups {
-		if containsStr(g.CountryCodes, code) {
+		if containsStr(g.RegionCodes, code) {
 			for i, cur := 0, gCode; cur != "" && i <= len(data.RegionGroups); i, cur = i+1, data.RegionGroups[cur].ParentCode {
 				chainSet[cur] = true
 			}
@@ -53,10 +53,10 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	for _, g := range chain {
 		rg := data.RegionGroups[g]
 		resp.RegionGroups = append(resp.RegionGroups, &pb.RegionGroup{
-			Code:         rg.Code,
-			ParentCode:   rg.ParentCode,
-			CountryCodes: rg.CountryCodes,
-			Name:         data.RegionGroupNames[l][g],
+			GroupCode:   rg.Code,
+			ParentCode:  rg.ParentCode,
+			RegionCodes: rg.RegionCodes,
+			Name:        data.RegionGroupNames[l][g],
 		})
 	}
 	for _, tag := range data.CountryLanguages[code] {
@@ -68,25 +68,25 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	}
 	for _, cc := range data.CurrencyOrder[l] {
 		cur := data.Currencies[cc]
-		if containsStr(cur.CountryCodes, code) {
+		if containsStr(cur.RegionCodes, code) {
 			resp.Currencies = append(resp.Currencies, &pb.Currency{
-				Code:         cur.Code,
-				Symbol:       cur.Symbol,
-				MinorUnits:   cur.MinorUnits,
-				CountryCodes: cur.CountryCodes,
-				Name:         data.CurrencyNames[l][cc],
-				FlagEmoji:    cur.FlagEmoji,
+				Code:        cur.Code,
+				Symbol:      cur.Symbol,
+				MinorUnits:  cur.MinorUnits,
+				RegionCodes: cur.RegionCodes,
+				Name:        data.CurrencyNames[l][cc],
+				FlagEmoji:   cur.FlagEmoji,
 			})
 		}
 	}
 	for _, id := range data.TimezoneOrder[l] {
 		tz := data.Timezones[id]
-		if containsStr(tz.CountryCodes, code) {
+		if containsStr(tz.RegionCodes, code) {
 			resp.Timezones = append(resp.Timezones, &pb.Timezone{
-				Id:           tz.ID,
-				Aliases:      tz.Aliases,
-				CountryCodes: tz.CountryCodes,
-				Name:         data.TimezoneNames[l][id],
+				Id:          tz.ID,
+				Aliases:     tz.Aliases,
+				RegionCodes: tz.RegionCodes,
+				Name:        data.TimezoneNames[l][id],
 			})
 		}
 	}

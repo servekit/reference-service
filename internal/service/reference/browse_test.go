@@ -13,7 +13,7 @@ func TestListCountriesByRegion(t *testing.T) {
 	s := New()
 	ctx := context.Background()
 
-	ea, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{RegionCode: "030"})
+	ea, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{GroupCode: "030"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,12 +22,12 @@ func TestListCountriesByRegion(t *testing.T) {
 		t.Fatalf("East Asia = %d countries, want %d", len(ea.GetCountries()), len(want))
 	}
 	for _, c := range ea.GetCountries() {
-		if !want[c.GetCode()] {
-			t.Fatalf("unexpected %s in East Asia", c.GetCode())
+		if !want[c.GetRegionCode()] {
+			t.Fatalf("unexpected %s in East Asia", c.GetRegionCode())
 		}
 	}
 
-	asia, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{RegionCode: "142", Locale: "en"})
+	asia, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{GroupCode: "142", Locale: "en"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestListCountriesByRegion(t *testing.T) {
 	}
 	seenCN := false
 	for _, c := range asia.GetCountries() {
-		if c.GetCode() == "CN" {
+		if c.GetRegionCode() == "CN" {
 			seenCN = true
 			if c.GetExampleNumber() == "" {
 				t.Fatalf("CN example number missing")
@@ -50,7 +50,7 @@ func TestListCountriesByRegion(t *testing.T) {
 		t.Fatalf("CN not under Asia recursively")
 	}
 
-	if _, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{RegionCode: "999"}); err == nil {
+	if _, err := s.ListCountriesByRegion(ctx, &pb.ListCountriesByRegionRequest{GroupCode: "999"}); err == nil {
 		t.Fatal("expected region-group-not-found error")
 	}
 }
@@ -59,7 +59,7 @@ func TestGetCountryDefaults(t *testing.T) {
 	s := New()
 	ctx := context.Background()
 
-	cn, err := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "CN"})
+	cn, err := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{RegionCode: "CN"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestGetCountryDefaults(t *testing.T) {
 		t.Fatalf("CN defaults = %+v", cn)
 	}
 
-	us, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "US", Locale: "en"})
+	us, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{RegionCode: "US", Locale: "en"})
 	if us.GetTimezoneId() != "America/New_York" || us.GetCurrencyCode() != "USD" ||
 		us.GetLanguageTag() != "en" || us.GetTimezoneName() != "New York" {
 		t.Fatalf("US defaults = %+v", us)
@@ -78,17 +78,17 @@ func TestGetCountryDefaults(t *testing.T) {
 	// UA: zone1970's first-row rule lands on the RU,UA Simferopol row; the
 	// CLDR exception (spelled with the historic alias Europe/Kiev) must be
 	// alias-normalized to Europe/Kyiv.
-	ua, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "UA"})
+	ua, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{RegionCode: "UA"})
 	if ua.GetTimezoneId() != "Europe/Kyiv" {
 		t.Fatalf("UA default timezone = %q, want Europe/Kyiv", ua.GetTimezoneId())
 	}
 	// TW: CLDR's zh_Hant (underscore) must normalize to zh-Hant.
-	tw, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "TW"})
+	tw, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{RegionCode: "TW"})
 	if tw.GetLanguageTag() != "zh-Hant" {
 		t.Fatalf("TW default language = %q, want zh-Hant", tw.GetLanguageTag())
 	}
 
-	if _, err := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "ZZ"}); err == nil {
+	if _, err := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{RegionCode: "ZZ"}); err == nil {
 		t.Fatal("expected country-not-found error")
 	}
 }
@@ -101,7 +101,7 @@ func TestGetDataInfo(t *testing.T) {
 	}
 	if info.GetDataVersion() != data.Version ||
 		len(info.GetLocales()) != len(data.Locales) ||
-		info.GetCountryCount() != int32(len(data.Countries)) ||
+		info.GetRegionCount() != int32(len(data.Countries)) ||
 		info.GetTimezoneCount() != int32(len(data.Timezones)) ||
 		info.GetLanguageCount() != int32(len(data.Languages)) ||
 		info.GetCurrencyCount() != int32(len(data.Currencies)) ||

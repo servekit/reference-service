@@ -16,8 +16,8 @@ func TestTimezonesIntegrity(t *testing.T) {
 	if !contains(sh.Aliases, "PRC") || !contains(sh.Aliases, "Asia/Chongqing") {
 		t.Fatalf("Asia/Shanghai aliases wrong: %v", sh.Aliases)
 	}
-	if !contains(sh.CountryCodes, "CN") {
-		t.Fatalf("Asia/Shanghai countries wrong: %v", sh.CountryCodes)
+	if !contains(sh.RegionCodes, "CN") {
+		t.Fatalf("Asia/Shanghai countries wrong: %v", sh.RegionCodes)
 	}
 	for alias, target := range TimezoneAliases {
 		if _, ok := Timezones[target]; !ok {

@@ -38,9 +38,9 @@ type Country struct {
 
 // Timezone is one canonical IANA zone.
 type Timezone struct {
-	ID           string   // canonical, e.g. "Asia/Shanghai"
-	Aliases      []string // tzdb backward links resolved to this zone
-	CountryCodes []string // alpha-2 members from zone1970.tab
+	ID          string   // canonical, e.g. "Asia/Shanghai"
+	Aliases     []string // tzdb backward links resolved to this zone
+	RegionCodes []string // alpha-2 members from zone1970.tab
 }
 
 // Language is one selectable BCP 47 tag.
@@ -51,17 +51,17 @@ type Language struct {
 
 // Currency is one ISO 4217 currency.
 type Currency struct {
-	Code         string
-	Symbol       string
-	MinorUnits   int32
-	CountryCodes []string // regions where currently valid
-	FlagEmoji    string   // issuer flag; "" when no country backs the code (XDR)
+	Code        string
+	Symbol      string
+	MinorUnits  int32
+	RegionCodes []string // regions where currently valid
+	FlagEmoji   string   // issuer flag; "" when no country backs the code (XDR)
 }
 
 // RegionGroup is one UN M49 node; top level (ParentCode == "") is a
 // continent — the world root (001) is not served.
 type RegionGroup struct {
-	Code         string
-	ParentCode   string
-	CountryCodes []string // direct members only
+	Code        string
+	ParentCode  string
+	RegionCodes []string // direct members only
 }

@@ -2,12 +2,12 @@ package data
 
 import "testing"
 
-// TestNoDanglingCountryCodes guards the directory's self-consistency: no
+// TestNoDanglingRegionCodes guards the directory's self-consistency: no
 // emitted table may reference an alpha-2 code the Countries table does not
 // serve. The generators filter against the dialing-region set (regions.go
 // always did; languages/timezones/currencies joined after a review found
 // AQ/TF/PN/GS/UM/EA/IC/... leaking in from upstream territories).
-func TestNoDanglingCountryCodes(t *testing.T) {
+func TestNoDanglingRegionCodes(t *testing.T) {
 	dangling := func(where string, codes ...string) {
 		for _, cc := range codes {
 			if _, ok := Countries[cc]; !ok {
@@ -16,10 +16,10 @@ func TestNoDanglingCountryCodes(t *testing.T) {
 		}
 	}
 	for code, cur := range Currencies {
-		dangling("currency "+code, cur.CountryCodes...)
+		dangling("currency "+code, cur.RegionCodes...)
 	}
 	for id, tz := range Timezones {
-		dangling("timezone "+id, tz.CountryCodes...)
+		dangling("timezone "+id, tz.RegionCodes...)
 	}
 	for cc := range PrimaryZones {
 		dangling("PrimaryZones", cc)
@@ -28,7 +28,7 @@ func TestNoDanglingCountryCodes(t *testing.T) {
 		dangling("CountryLanguages", cc)
 	}
 	for g, rg := range RegionGroups {
-		dangling("region group "+g, rg.CountryCodes...)
+		dangling("region group "+g, rg.RegionCodes...)
 	}
 }
 

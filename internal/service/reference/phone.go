@@ -32,7 +32,7 @@ func (*Service) ParsePhone(_ context.Context, req *pb.ParsePhoneRequest) (*pb.Pa
 		Type:                   phoneTypeToProto(phonenumbers.GetNumberType(num)),
 	}
 	if region := phonenumbers.GetRegionCodeForNumber(num); region != "" {
-		resp.CountryCode = region
+		resp.RegionCode = region
 		if c, ok := data.Countries[region]; ok {
 			resp.DialCode = c.DialCode
 		}

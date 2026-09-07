@@ -21,11 +21,11 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 	l := resolveLocale(req.GetLocale())
 	resp := &pb.ResolveCodesResponse{DataVersion: data.Version}
 
-	for _, code := range req.GetCountryCodes() {
+	for _, code := range req.GetRegionCodes() {
 		if c, ok := data.Countries[code]; ok {
 			resp.Countries = append(resp.Countries, countryRow(l, code, c))
 		} else {
-			resp.MissingCountries = append(resp.MissingCountries, code)
+			resp.MissingRegions = append(resp.MissingRegions, code)
 		}
 	}
 
@@ -42,10 +42,10 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 		}
 		if t, ok := data.Timezones[canonical]; ok {
 			resp.Timezones = append(resp.Timezones, &pb.Timezone{
-				Id:           t.ID,
-				Aliases:      t.Aliases,
-				CountryCodes: t.CountryCodes,
-				Name:         data.TimezoneNames[l][canonical],
+				Id:          t.ID,
+				Aliases:     t.Aliases,
+				RegionCodes: t.RegionCodes,
+				Name:        data.TimezoneNames[l][canonical],
 			})
 		} else {
 			resp.MissingTimezones = append(resp.MissingTimezones, id)
@@ -73,12 +73,12 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 	for _, code := range req.GetCurrencyCodes() {
 		if c, ok := data.Currencies[code]; ok {
 			resp.Currencies = append(resp.Currencies, &pb.Currency{
-				Code:         c.Code,
-				Symbol:       c.Symbol,
-				MinorUnits:   c.MinorUnits,
-				CountryCodes: c.CountryCodes,
-				Name:         data.CurrencyNames[l][code],
-				FlagEmoji:    c.FlagEmoji,
+				Code:        c.Code,
+				Symbol:      c.Symbol,
+				MinorUnits:  c.MinorUnits,
+				RegionCodes: c.RegionCodes,
+				Name:        data.CurrencyNames[l][code],
+				FlagEmoji:   c.FlagEmoji,
 			})
 		} else {
 			resp.MissingCurrencies = append(resp.MissingCurrencies, code)

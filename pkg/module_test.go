@@ -25,7 +25,7 @@ func TestModule_ServesAllDomains(t *testing.T) {
 	countries, err := hdl.ListCountries(ctx, &pb.ListCountriesRequest{})
 	require.NoError(t, err)
 	require.Len(t, countries.GetCountries(), len(data.Countries))
-	require.Equal(t, "AL", countries.GetCountries()[0].GetCode())
+	require.Equal(t, "AL", countries.GetCountries()[0].GetRegionCode())
 	require.Equal(t, data.Version, countries.GetDataVersion())
 
 	ja, err := hdl.ListCountries(ctx, &pb.ListCountriesRequest{Locale: "ja"})
@@ -53,22 +53,22 @@ func TestModule_ServesAllDomains(t *testing.T) {
 	parsed, err := hdl.ParsePhone(ctx, &pb.ParsePhoneRequest{Raw: "+8613800138000"})
 	require.NoError(t, err)
 	require.True(t, parsed.GetIsValid())
-	require.Equal(t, "CN", parsed.GetCountryCode())
+	require.Equal(t, "CN", parsed.GetRegionCode())
 
 	resolved, err := hdl.ResolveCodes(ctx, &pb.ResolveCodesRequest{
-		CountryCodes: []string{"CN", "ZZ"},
-		TimezoneIds:  []string{"PRC"},
+		RegionCodes: []string{"CN", "ZZ"},
+		TimezoneIds: []string{"PRC"},
 	})
 	require.NoError(t, err)
 	require.Len(t, resolved.GetCountries(), 1)
-	require.Equal(t, []string{"ZZ"}, resolved.GetMissingCountries())
+	require.Equal(t, []string{"ZZ"}, resolved.GetMissingRegions())
 	require.Equal(t, "Asia/Shanghai", resolved.GetTimezones()[0].GetId())
 }
 
 func firstName(t *testing.T, resp *pb.ListCountriesResponse, code string) string {
 	t.Helper()
 	for _, c := range resp.GetCountries() {
-		if c.GetCode() == code {
+		if c.GetRegionCode() == code {
 			return c.GetName()
 		}
 	}

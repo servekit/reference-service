@@ -17,7 +17,7 @@ func TestParsePhoneGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !got.GetIsValid() || got.GetCountryCode() != "CN" || got.GetDialCode() != "+86" ||
+	if !got.GetIsValid() || got.GetRegionCode() != "CN" || got.GetDialCode() != "+86" ||
 		got.GetE164() != "+8613800138000" || got.GetNationalNumber() != "13800138000" ||
 		got.GetType() != pb.PhoneType_PHONE_TYPE_MOBILE {
 		t.Fatalf("CN mobile: %+v", got)
@@ -46,7 +46,7 @@ func TestParsePhoneGolden(t *testing.T) {
 func TestParsePhoneUSLine(t *testing.T) {
 	s := New()
 	got, _ := s.ParsePhone(context.Background(), &pb.ParsePhoneRequest{Raw: "+1 650 253 0000"})
-	if !got.GetIsValid() || got.GetCountryCode() != "US" || got.GetDialCode() != "+1" {
+	if !got.GetIsValid() || got.GetRegionCode() != "US" || got.GetDialCode() != "+1" {
 		t.Fatalf("US line: %+v", got)
 	}
 	switch got.GetType() {

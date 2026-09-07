@@ -11,11 +11,11 @@ require (
 	// Contract repo (servekit mode). Pinned at ../api HEAD when scaffolded; the
 	// new domain's generated code is not in that commit yet, so after pushing
 	// ../api bump it: go get github.com/servekit/api/gen/go@<commit> && go mod tidy
-	github.com/servekit/api/gen/go v0.0.0-20260906175858-58f4dd4c6f14
+	github.com/servekit/api/gen/go v0.0.0-20260907134616-c735fd847cc4
 	// go-common carries the provider-contract stack (dbx/redisx.Connect,
 	// grpcx/clienttest) and the security bumps; keep this in step with the
 	// latest go-common main when the scaffold regenerates demo-service.
-	github.com/servekit/go-common v0.0.0-20260904101207-39630b2b22cc
+	github.com/servekit/go-common v0.0.0-20260907134535-5a601f9f7499
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260904194346-d0f1323225a4 // indirect
 	google.golang.org/grpc v1.83.2

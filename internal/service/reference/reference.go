@@ -66,7 +66,7 @@ func (*Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest) (
 // GetCountries, and the per-code lookups can never drift apart.
 func countryRow(l, code string, c data.Country) *pb.Country {
 	return &pb.Country{
-		Code:          c.Code,
+		RegionCode:    c.Code,
 		Alpha_3:       c.Alpha3,
 		DialCode:      c.DialCode,
 		FlagEmoji:     c.FlagEmoji,
@@ -79,16 +79,16 @@ func countryRow(l, code string, c data.Country) *pb.Country {
 // GetCountries returns the directory rows for exactly the requested
 // alpha-2 codes, in request order — the subset-fetch counterpart to
 // ListCountries' full collated listing. Unknown codes land in
-// missing_countries (request order) and never fail the call, so a caller
+// missing_regions (request order) and never fail the call, so a caller
 // can validate its served-country config in the same round-trip.
 func (*Service) GetCountries(_ context.Context, req *pb.GetCountriesRequest) (*pb.GetCountriesResponse, error) {
 	l := resolveLocale(req.GetLocale())
 	resp := &pb.GetCountriesResponse{DataVersion: data.Version}
-	for _, code := range req.GetCountryCodes() {
+	for _, code := range req.GetRegionCodes() {
 		if c, ok := data.Countries[code]; ok {
 			resp.Countries = append(resp.Countries, countryRow(l, code, c))
 		} else {
-			resp.MissingCountries = append(resp.MissingCountries, code)
+			resp.MissingRegions = append(resp.MissingRegions, code)
 		}
 	}
 	return resp, nil
@@ -102,10 +102,10 @@ func (*Service) ListTimezones(_ context.Context, req *pb.ListTimezonesRequest) (
 	for _, id := range data.TimezoneOrder[l] {
 		t := data.Timezones[id]
 		out = append(out, &pb.Timezone{
-			Id:           t.ID,
-			Aliases:      t.Aliases,
-			CountryCodes: t.CountryCodes,
-			Name:         names[id],
+			Id:          t.ID,
+			Aliases:     t.Aliases,
+			RegionCodes: t.RegionCodes,
+			Name:        names[id],
 		})
 	}
 	return &pb.ListTimezonesResponse{Timezones: out, DataVersion: data.Version}, nil
@@ -134,12 +134,12 @@ func (*Service) ListCurrencies(_ context.Context, req *pb.ListCurrenciesRequest)
 	for _, code := range data.CurrencyOrder[l] {
 		c := data.Currencies[code]
 		out = append(out, &pb.Currency{
-			Code:         c.Code,
-			Symbol:       c.Symbol,
-			MinorUnits:   c.MinorUnits,
-			CountryCodes: c.CountryCodes,
-			Name:         names[code],
-			FlagEmoji:    c.FlagEmoji,
+			Code:        c.Code,
+			Symbol:      c.Symbol,
+			MinorUnits:  c.MinorUnits,
+			RegionCodes: c.RegionCodes,
+			Name:        names[code],
+			FlagEmoji:   c.FlagEmoji,
 		})
 	}
 	return &pb.ListCurrenciesResponse{Currencies: out, DataVersion: data.Version}, nil
@@ -153,10 +153,10 @@ func (*Service) ListRegionGroups(_ context.Context, req *pb.ListRegionGroupsRequ
 	for _, code := range data.RegionGroupOrder[l] {
 		g := data.RegionGroups[code]
 		out = append(out, &pb.RegionGroup{
-			Code:         g.Code,
-			ParentCode:   g.ParentCode,
-			CountryCodes: g.CountryCodes,
-			Name:         names[code],
+			GroupCode:   g.Code,
+			ParentCode:  g.ParentCode,
+			RegionCodes: g.RegionCodes,
+			Name:        names[code],
 		})
 	}
 	return &pb.ListRegionGroupsResponse{RegionGroups: out, DataVersion: data.Version}, nil

@@ -42,7 +42,7 @@ func TestRegionGroupsGoldenRows(t *testing.T) {
 		t.Errorf("en 142 = %q, want Asia", RegionGroupNames["en"]["142"])
 	}
 	ea := RegionGroups["030"] // Eastern Asia
-	if ea.ParentCode != "142" || !contains(ea.CountryCodes, "CN") {
+	if ea.ParentCode != "142" || !contains(ea.RegionCodes, "CN") {
 		t.Errorf("030 (Eastern Asia) wrong: %+v", ea)
 	}
 }
