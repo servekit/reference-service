@@ -17,8 +17,11 @@ const (
 	pkgCore        = "https://unpkg.com/cldr-core@" + cldrVersion
 
 	urlISO3166 = "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json"
-	urlZoneTab = "https://raw.githubusercontent.com/eggert/tz/main/zone1970.tab"
-	urlTzBack  = "https://raw.githubusercontent.com/eggert/tz/main/backward"
+	// tz sources are pinned to a release tag (not main HEAD) so
+	// regeneration is reproducible within a data release; bump the tag
+	// deliberately, review the diff, release.
+	urlZoneTab = "https://raw.githubusercontent.com/eggert/tz/2026c/zone1970.tab"
+	urlTzBack  = "https://raw.githubusercontent.com/eggert/tz/2026c/backward"
 )
 
 func urlTerritories(locale string) string {
