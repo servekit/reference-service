@@ -174,16 +174,12 @@ func exemplarCity(tree map[string]any, id string) string {
 	return ""
 }
 
-// currencyNameEntry is one CLDR currencies.json leaf.
-type currencyNameEntry struct {
-	DisplayName string `json:"displayName"`
-	Symbol      string `json:"symbol"`
-}
-
+// currenciesFile: each currency entry is kept as the raw JSON map so the
+// hyphenated variant keys ("symbol-alt-narrow") are reachable.
 type currenciesFile struct {
 	Main map[string]struct {
 		Numbers struct {
-			Currencies map[string]currencyNameEntry `json:"currencies"`
+			Currencies map[string]map[string]string `json:"currencies"`
 		} `json:"numbers"`
 	} `json:"main"`
 }

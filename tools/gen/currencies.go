@@ -40,7 +40,7 @@ func buildCurrencies(cacheDir string) error {
 	fractions := cd.Supplemental.CurrencyData.Fractions
 	regions := cd.Supplemental.CurrencyData.Region
 
-	names := make(map[string]map[string]currencyNameEntry, len(locales))
+	names := make(map[string]map[string]map[string]string, len(locales))
 	for _, l := range locales {
 		var cf currenciesFile
 		if err := getJSON(urlCurrencies(l), cacheDir, &cf); err != nil {
@@ -101,14 +101,14 @@ func buildCurrencies(cacheDir string) error {
 	}
 
 	// Names + symbols; every locale names every code, falling back to
-	// English, then to the code itself for both.
+	// English, then to the code itself.
 	nameTables := make(map[string]map[string]string, len(locales))
 	for _, l := range locales {
 		nameTables[l] = make(map[string]string, len(entities))
 		for code := range entities {
-			n := names[l][code].DisplayName
+			n := names[l][code]["displayName"]
 			if n == "" {
-				n = names["en"][code].DisplayName
+				n = names["en"][code]["displayName"]
 			}
 			if n == "" {
 				n = code
@@ -116,11 +116,17 @@ func buildCurrencies(cacheDir string) error {
 			nameTables[l][code] = n
 		}
 	}
+	// Symbol: the NARROW variant first ("¥", "$", "€") — one glyph, the
+	// picker/form display everyone expects; CLDR's standard symbol is the
+	// disambiguated form (CN¥/A$) which only pays off in mixed-currency
+	// tables, and our rows already carry the code for that.
 	for code, row := range entities {
-		if row.Symbol == "" {
-			row.Symbol = firstNonEmpty(names["en"][code].Symbol, code)
-			entities[code] = row
-		}
+		row.Symbol = firstNonEmpty(
+			names["en"][code]["symbol-alt-narrow"],
+			names["en"][code]["symbol"],
+			code,
+		)
+		entities[code] = row
 	}
 
 	orders := make(map[string][]string, len(locales))

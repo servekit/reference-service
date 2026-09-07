@@ -32,8 +32,19 @@ func TestCurrenciesIntegrity(t *testing.T) {
 }
 
 func TestCurrenciesGoldenRows(t *testing.T) {
-	if c := Currencies["CNY"]; c.Symbol != "CN¥" || c.MinorUnits != 2 || !contains(c.CountryCodes, "CN") {
+	if c := Currencies["CNY"]; c.Symbol != "¥" || c.MinorUnits != 2 || !contains(c.CountryCodes, "CN") {
 		t.Errorf("CNY row wrong: %+v", c)
+	}
+	// Narrow symbols — one glyph, no disambiguation letters (the code column
+	// disambiguates ¥/$ where needed).
+	if c := Currencies["AUD"]; c.Symbol != "$" {
+		t.Errorf("AUD symbol = %q, want $", c.Symbol)
+	}
+	if c := Currencies["USD"]; c.Symbol != "$" {
+		t.Errorf("USD symbol = %q, want $", c.Symbol)
+	}
+	if c := Currencies["EUR"]; c.Symbol != "€" {
+		t.Errorf("EUR symbol = %q, want €", c.Symbol)
 	}
 	if c := Currencies["JPY"]; c.MinorUnits != 0 {
 		t.Errorf("JPY minor_units = %d, want 0", c.MinorUnits)
