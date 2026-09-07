@@ -1,6 +1,9 @@
 package data
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestTimezonesIntegrity(t *testing.T) {
 	if n := len(Timezones); n < 300 || n > 450 {
@@ -50,4 +53,48 @@ func contains(ss []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// TestTimezoneNamesFallbackChain: zh-Hans names must not degrade to raw
+// English city names — zones without a translated exemplarCity fall back
+// to the metazone name (e.g. America/Argentina/* -> 阿根廷时间). Only
+// Etc/GMT-style ids may stay Latin.
+func TestTimezoneNamesFallbackChain(t *testing.T) {
+	zh := TimezoneNames["zh-Hans"]
+	if got := zh["America/Argentina/Buenos_Aires"]; got != "阿根廷时间" {
+		t.Errorf("Buenos_Aires zh = %q, want 阿根廷时间", got)
+	}
+	if got := zh["America/Argentina/Rio_Gallegos"]; got != "里奥加耶戈斯" {
+		t.Errorf("Rio_Gallegos zh = %q (exemplarCity must win over metazone)", got)
+	}
+	if got := zh["Asia/Shanghai"]; got != "上海" {
+		t.Errorf("Shanghai zh = %q", got)
+	}
+	latin := 0
+	for id, name := range zh {
+		if strings.HasPrefix(id, "Etc/GMT") {
+			continue
+		}
+		if allLatin(name) {
+			latin++
+			if latin <= 5 {
+				t.Logf("latin-only zh name remains: %s -> %q", id, name)
+			}
+		}
+	}
+	// Known CLDR-45 gap: America/Coyhaique and America/Brit_Columbia/Golden
+	// are tz-2025 additions whose metazone registrations haven't landed in
+	// CLDR yet — they heal on the next CLDR bump.
+	if latin > 2 {
+		t.Fatalf("%d zh-Hans timezone names are still latin-only (want <=2, the CLDR-45 gap)", latin)
+	}
+}
+
+func allLatin(s string) bool {
+	for _, r := range s {
+		if r >= 0x2E80 {
+			return false
+		}
+	}
+	return true
 }

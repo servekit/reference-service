@@ -108,25 +108,79 @@ func buildTimezones(cacheDir string) error {
 		entities[target] = row
 	}
 
-	// Names: CLDR exemplarCity under zone/<region>/<city>, fallback to the
-	// id's last segment with underscores as spaces.
+	// Zone -> metazone table (territory 001, ids normalized to canonical).
+	var mz metaZonesFile
+	if err := getJSON(urlMetaZones, cacheDir, &mz); err != nil {
+		return err
+	}
+	zoneMetazone := make(map[string]string)
+	for _, m := range mz.Supplemental.MetaZones.Metazones {
+		z := m.MapZone
+		if z.Territory != "001" {
+			continue
+		}
+		id := z.Type
+		if _, ok := entities[id]; !ok {
+			if canonical, isAlias := aliases[id]; isAlias {
+				id = canonical
+			} else {
+				continue
+			}
+		}
+		zoneMetazone[id] = z.Other
+	}
+	// Recently renamed zones (Europe/Kyiv, America/Argentina/Cordoba, ...)
+	// are absent from the flat table — their current metazone comes from
+	// the dated history tree instead.
+	tzTree, _ := mz.Supplemental.MetaZones.MetazoneInfo["timezone"].(map[string]any)
+	walkMetazoneInfo(tzTree, "", func(zone, mzone string) {
+		if _, ok := entities[zone]; !ok {
+			if canonical, isAlias := aliases[zone]; isAlias {
+				zone = canonical
+			} else {
+				return
+			}
+		}
+		if _, exists := zoneMetazone[zone]; !exists {
+			zoneMetazone[zone] = mzone
+		}
+	})
+
+	// Names, the picker-style fallback chain:
+	//   1. the locale's exemplarCity when translated (zh: 上海);
+	//   2. otherwise the metazone long name for non-English locales —
+	//      CLDR's en tree only stores cities whose name differs from the
+	//      id's last segment, so a missing entry means "last segment IS the
+	//      city" (Shanghai) for en but "no translation" elsewhere, where
+	//      the metazone (阿根廷时间) beats a raw English city;
+	//   3. for en, the id's last segment directly (Shanghai, Kyiv);
+	//   4. Etc/GMT* and metazone-less zones end at the last segment too.
 	names := make(map[string]map[string]string, len(locales))
 	for _, l := range locales {
 		var tf timezoneNamesFile
 		if err := getJSON(urlTimezoneNames(l), cacheDir, &tf); err != nil {
 			return fmt.Errorf("timezoneNames %s: %w", l, err)
 		}
-		zones := sole(tf.Main).Dates.TimeZoneNames.Zone
+		tn := sole(tf.Main).Dates.TimeZoneNames
 		names[l] = make(map[string]string, len(entities))
 		for id := range entities {
-			if city := exemplarCity(zones, id); city != "" {
+			last := strings.ReplaceAll(id[strings.LastIndex(id, "/")+1:], "_", " ")
+			if city := exemplarCity(tn.Zone, id); city != "" {
 				names[l][id] = city
 				continue
 			}
-			// No exemplar city (Etc/*, golden zones) — display the last
-			// path segment with underscores as spaces.
-			last := id[strings.LastIndex(id, "/")+1:]
-			names[l][id] = strings.ReplaceAll(last, "_", " ")
+			if l != "en" {
+				if mzone := zoneMetazone[id]; mzone != "" {
+					if n := tn.Metazone[mzone]; n.Long.Generic != "" {
+						names[l][id] = n.Long.Generic
+						continue
+					} else if n.Long.Standard != "" {
+						names[l][id] = n.Long.Standard
+						continue
+					}
+				}
+			}
+			names[l][id] = last
 		}
 	}
 

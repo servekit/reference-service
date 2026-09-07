@@ -42,6 +42,7 @@ const (
 	urlCurrencyData         = pkgCore + "/supplemental/currencyData.json"
 	urlTerritoryInfo        = pkgCore + "/supplemental/territoryInfo.json"
 	urlPrimaryZones         = pkgCore + "/supplemental/primaryZones.json"
+	urlMetaZones            = pkgCore + "/supplemental/metaZones.json"
 )
 
 // CLDR wraps every main/<locale> file in main.<locale> plus a level keyed by
@@ -74,15 +75,84 @@ type languagesFile struct {
 
 // timezoneNamesFile: CLDR nests zone trees arbitrarily deep
 // (zone > America > Argentina > Buenos_Aires), so the tree is decoded as
-// generic maps and walked segment by segment.
+// generic maps and walked segment by segment. The metazone section carries
+// the locale's names for zone groups (Argentina Time, ...).
 type timezoneNamesFile struct {
 	Main map[string]struct {
 		Dates struct {
 			TimeZoneNames struct {
-				Zone map[string]any `json:"zone"`
+				Zone     map[string]any `json:"zone"`
+				Metazone map[string]struct {
+					Long struct {
+						Generic  string `json:"generic"`
+						Standard string `json:"standard"`
+					} `json:"long"`
+				} `json:"metazone"`
 			} `json:"timeZoneNames"`
 		} `json:"dates"`
 	} `json:"main"`
+}
+
+// metaZonesFile models CLDR supplemental metaZones: the territory-001
+// mapZone list is a flat zone-id -> metazone table, and metazoneInfo is the
+// per-zone history tree (zone -> dated metazone intervals; the entry with
+// no _to is current). Both spell zone ids with their historical names —
+// callers normalize via the backward-link table.
+type metaZonesFile struct {
+	Supplemental struct {
+		MetaZones struct {
+			Metazones []struct {
+				MapZone struct {
+					Type      string `json:"_type"`
+					Territory string `json:"_territory"`
+					Other     string `json:"_other"`
+				} `json:"mapZone"`
+			} `json:"metazones"`
+			MetazoneInfo map[string]any `json:"metazoneInfo"`
+		} `json:"metaZones"`
+	} `json:"supplemental"`
+}
+
+// currentMetazone extracts the usesMetazone entry with no _to (the zone's
+// current metazone) from a metazoneInfo leaf list.
+func currentMetazone(leaf any) string {
+	list, ok := leaf.([]any)
+	if !ok {
+		return ""
+	}
+	for _, e := range list {
+		uses, ok := e.(map[string]any)["usesMetazone"].(map[string]any)
+		if !ok {
+			continue
+		}
+		if _, hasTo := uses["_to"]; !hasTo {
+			if m, ok := uses["_mzone"].(string); ok {
+				return m
+			}
+		}
+	}
+	return ""
+}
+
+// walkMetazoneInfo visits every zone leaf under the timezone tree and calls
+// fn(zoneID, metazone) for entries with a current metazone. A leaf is a
+// list of dated usesMetazone intervals; interior nodes are dicts.
+func walkMetazoneInfo(node map[string]any, prefix string, fn func(zone, mzone string)) {
+	for k, v := range node {
+		zone := k
+		if prefix != "" {
+			zone = prefix + "/" + k
+		}
+		if _, isList := v.([]any); isList {
+			if m := currentMetazone(v); m != "" {
+				fn(zone, m)
+			}
+			continue
+		}
+		if children, isDict := v.(map[string]any); isDict {
+			walkMetazoneInfo(children, zone, fn)
+		}
+	}
 }
 
 // exemplarCity walks a zone tree along the id's segments and returns the
