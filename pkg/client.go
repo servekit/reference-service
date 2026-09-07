@@ -62,6 +62,11 @@ func (c *Client) ListCountries(ctx context.Context, in *referencev1.ListCountrie
 	return c.cli.ListCountries(ctx, in)
 }
 
+// GetCountries delegates to the remote reference-service.
+func (c *Client) GetCountries(ctx context.Context, in *referencev1.GetCountriesRequest) (*referencev1.GetCountriesResponse, error) {
+	return c.cli.GetCountries(ctx, in)
+}
+
 // ListTimezones delegates to the remote reference-service.
 func (c *Client) ListTimezones(ctx context.Context, in *referencev1.ListTimezonesRequest) (*referencev1.ListTimezonesResponse, error) {
 	return c.cli.ListTimezones(ctx, in)

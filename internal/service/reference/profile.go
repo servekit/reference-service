@@ -51,6 +51,7 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 			FlagEmoji:     c.FlagEmoji,
 			Name:          data.CountryNames[l][code],
 			ExampleNumber: c.ExampleNumber,
+			LanguageTags:  data.CountryLanguages[code],
 		},
 		DataVersion: data.Version,
 	}

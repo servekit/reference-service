@@ -41,6 +41,22 @@ func TestListCountriesDefaultLocale(t *testing.T) {
 	if first.GetCode() != "AL" || first.GetName() != "阿尔巴尼亚" || first.GetFlagEmoji() == "" {
 		t.Fatalf("first zh-Hans entry = %+v, want AL/阿尔巴尼亚 with flag", first)
 	}
+	if got := first.GetLanguageTags(); len(got) != 1 || got[0] != "sq" {
+		t.Fatalf("AL language_tags = %v, want [sq]", got)
+	}
+	// Territories without official-status entries fall back to population
+	// ranking in the generator — AC gets [en] (CLDR: 99% English, no flag).
+	for _, c := range resp.GetCountries() {
+		if c.GetCode() == "AC" {
+			if got := c.GetLanguageTags(); len(got) != 1 || got[0] != "en" {
+				t.Fatalf("AC language_tags = %v, want [en]", got)
+			}
+			if c.GetAlpha_3() != "ASC" {
+				t.Fatalf("AC alpha3 = %q, want ASC (UPU-reserved overlay)", c.GetAlpha_3())
+			}
+			break
+		}
+	}
 	if resp.GetDataVersion() != data.Version {
 		t.Fatalf("data_version = %q, want %q", resp.GetDataVersion(), data.Version)
 	}
@@ -59,6 +75,46 @@ func TestListCountriesHonorsLocale(t *testing.T) {
 	respJa, _ := s.ListCountries(context.Background(), &pb.ListCountriesRequest{Locale: "ja"})
 	if len(respJa.GetCountries()) != len(data.Countries) {
 		t.Fatalf("ja list incomplete: %d", len(respJa.GetCountries()))
+	}
+}
+
+func TestGetCountries(t *testing.T) {
+	s := New()
+	resp, err := s.GetCountries(context.Background(), &pb.GetCountriesRequest{
+		CountryCodes: []string{"US", "AC", "ZZ", "CN"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Rows come back in request order (not locale collation)...
+	if len(resp.GetCountries()) != 3 ||
+		resp.GetCountries()[0].GetCode() != "US" ||
+		resp.GetCountries()[1].GetCode() != "AC" ||
+		resp.GetCountries()[2].GetCode() != "CN" {
+		t.Fatalf("countries not in request order: %+v", resp.GetCountries())
+	}
+	// ...carrying the full directory row: enriched alpha-3 + languages.
+	if got := resp.GetCountries()[1]; got.GetAlpha_3() != "ASC" || len(got.GetLanguageTags()) != 1 || got.GetLanguageTags()[0] != "en" {
+		t.Fatalf("AC row = %+v", got)
+	}
+	// Unknown codes are reported, never an error.
+	if len(resp.GetMissingCountries()) != 1 || resp.GetMissingCountries()[0] != "ZZ" {
+		t.Fatalf("missing countries: %v", resp.GetMissingCountries())
+	}
+	if resp.GetDataVersion() != data.Version {
+		t.Fatalf("data_version = %q, want %q", resp.GetDataVersion(), data.Version)
+	}
+
+	// Empty request is a valid no-op (nothing requested, nothing missing).
+	empty, err := s.GetCountries(context.Background(), &pb.GetCountriesRequest{})
+	if err != nil || len(empty.GetCountries()) != 0 || len(empty.GetMissingCountries()) != 0 {
+		t.Fatalf("empty request: %+v err=%v", empty, err)
+	}
+
+	// Locale resolution applies like every other read.
+	en, _ := s.GetCountries(context.Background(), &pb.GetCountriesRequest{CountryCodes: []string{"CN"}, Locale: "en"})
+	if en.GetCountries()[0].GetName() != "China" {
+		t.Fatalf("en name = %q", en.GetCountries()[0].GetName())
 	}
 }
 
@@ -96,6 +152,10 @@ func TestResolveCodes(t *testing.T) {
 	}
 	if len(resp.GetCountries()) != 1 || resp.GetCountries()[0].GetName() != "中国" {
 		t.Fatalf("countries: %+v", resp.GetCountries())
+	}
+	// ResolveCodes rows carry the same fields as ListCountries (language_tags).
+	if got := resp.GetCountries()[0].GetLanguageTags(); len(got) != 1 || got[0] != "zh" {
+		t.Fatalf("CN language_tags = %v, want [zh]", got)
 	}
 	if len(resp.GetMissingCountries()) != 1 || resp.GetMissingCountries()[0] != "ZZ" {
 		t.Fatalf("missing countries: %v", resp.GetMissingCountries())

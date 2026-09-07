@@ -146,6 +146,11 @@ func (s *Service) ListCountries(ctx context.Context, req *referencev1.ListCountr
 	return s.reference.ListCountries(ctx, req)
 }
 
+// GetCountries delegates to the reference subpackage.
+func (s *Service) GetCountries(ctx context.Context, req *referencev1.GetCountriesRequest) (*referencev1.GetCountriesResponse, error) {
+	return s.reference.GetCountries(ctx, req)
+}
+
 // ListTimezones delegates to the reference subpackage.
 func (s *Service) ListTimezones(ctx context.Context, req *referencev1.ListTimezonesRequest) (*referencev1.ListTimezonesResponse, error) {
 	return s.reference.ListTimezones(ctx, req)

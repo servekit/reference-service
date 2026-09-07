@@ -54,20 +54,44 @@ func New() *Service { return &Service{} }
 // ListCountries returns the full country directory in the request locale.
 func (*Service) ListCountries(_ context.Context, req *pb.ListCountriesRequest) (*pb.ListCountriesResponse, error) {
 	l := resolveLocale(req.GetLocale())
-	names := data.CountryNames[l]
 	out := make([]*pb.Country, 0, len(data.CountryOrder[l]))
 	for _, code := range data.CountryOrder[l] {
-		c := data.Countries[code]
-		out = append(out, &pb.Country{
-			Code:          c.Code,
-			Alpha_3:       c.Alpha3,
-			DialCode:      c.DialCode,
-			FlagEmoji:     c.FlagEmoji,
-			Name:          names[code],
-			ExampleNumber: c.ExampleNumber,
-		})
+		out = append(out, countryRow(l, code, data.Countries[code]))
 	}
 	return &pb.ListCountriesResponse{Countries: out, DataVersion: data.Version}, nil
+}
+
+// countryRow builds the wire Country for one alpha-2 in locale l — the
+// single source every country-returning handler shares, so ListCountries,
+// GetCountries, and the per-code lookups can never drift apart.
+func countryRow(l, code string, c data.Country) *pb.Country {
+	return &pb.Country{
+		Code:          c.Code,
+		Alpha_3:       c.Alpha3,
+		DialCode:      c.DialCode,
+		FlagEmoji:     c.FlagEmoji,
+		Name:          data.CountryNames[l][code],
+		ExampleNumber: c.ExampleNumber,
+		LanguageTags:  data.CountryLanguages[code],
+	}
+}
+
+// GetCountries returns the directory rows for exactly the requested
+// alpha-2 codes, in request order — the subset-fetch counterpart to
+// ListCountries' full collated listing. Unknown codes land in
+// missing_countries (request order) and never fail the call, so a caller
+// can validate its served-country config in the same round-trip.
+func (*Service) GetCountries(_ context.Context, req *pb.GetCountriesRequest) (*pb.GetCountriesResponse, error) {
+	l := resolveLocale(req.GetLocale())
+	resp := &pb.GetCountriesResponse{DataVersion: data.Version}
+	for _, code := range req.GetCountryCodes() {
+		if c, ok := data.Countries[code]; ok {
+			resp.Countries = append(resp.Countries, countryRow(l, code, c))
+		} else {
+			resp.MissingCountries = append(resp.MissingCountries, code)
+		}
+	}
+	return resp, nil
 }
 
 // ListTimezones returns the canonical IANA zones in the request locale.

@@ -41,6 +41,9 @@ func TestListCountriesByRegion(t *testing.T) {
 			if c.GetExampleNumber() == "" {
 				t.Fatalf("CN example number missing")
 			}
+			if got := c.GetLanguageTags(); len(got) == 0 || got[0] != "zh" {
+				t.Fatalf("CN language_tags = %v, want zh first", got)
+			}
 		}
 	}
 	if !seenCN {

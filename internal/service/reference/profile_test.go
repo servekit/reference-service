@@ -26,6 +26,9 @@ func TestGetCountryProfileCN(t *testing.T) {
 	if resp.GetCountry().GetName() != "中国" || resp.GetCountry().GetDialCode() != "+86" {
 		t.Fatalf("country = %+v", resp.GetCountry())
 	}
+	if got := resp.GetCountry().GetLanguageTags(); len(got) != 1 || got[0] != "zh" {
+		t.Fatalf("CN country.language_tags = %v, want [zh]", got)
+	}
 	if got := codes(resp.GetRegionGroups()); len(got) != 2 || got[0] != "亚洲" || got[1] != "东亚" {
 		t.Fatalf("CN chain = %v, want [亚洲 东亚]", got)
 	}
@@ -85,5 +88,42 @@ func TestGetCountryProfileNotFound(t *testing.T) {
 	_, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "ZZ"})
 	if err == nil {
 		t.Fatal("expected not-found error")
+	}
+}
+
+// TestGetCountryProfileAC locks in the curated enrichment for the
+// exceptionally-reserved territories: alpha-3 from the ISO reserved list
+// (ASC), region folded into Saint Helena's UN chain (Africa -> Western
+// Africa), language from the population fallback (en), timezone mirrored
+// from SH (Africa/Abidjan — tzdb links Atlantic/St_Helena there).
+func TestGetCountryProfileAC(t *testing.T) {
+	s := New()
+	resp, err := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "AC"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetCountry().GetAlpha_3() != "ASC" {
+		t.Fatalf("AC alpha3 = %q, want ASC", resp.GetCountry().GetAlpha_3())
+	}
+	if got := codes(resp.GetRegionGroups()); len(got) != 2 || got[0] != "非洲" || got[1] != "西非" {
+		t.Fatalf("AC chain = %v, want [非洲 西非]", got)
+	}
+	if len(resp.GetLanguages()) != 1 || resp.GetLanguages()[0].GetTag() != "en" {
+		t.Fatalf("AC languages = %+v, want [en]", resp.GetLanguages())
+	}
+	if len(resp.GetCurrencies()) != 1 || resp.GetCurrencies()[0].GetCode() != "SHP" {
+		t.Fatalf("AC currencies = %+v, want [SHP]", resp.GetCurrencies())
+	}
+	if len(resp.GetTimezones()) != 1 || resp.GetTimezones()[0].GetId() != "Africa/Abidjan" {
+		t.Fatalf("AC timezones = %+v, want [Africa/Abidjan]", resp.GetTimezones())
+	}
+
+	// Defaults resolve through the same enrichment (XK inherits Belgrade).
+	d, err := s.GetCountryDefaults(context.Background(), &pb.GetCountryDefaultsRequest{CountryCode: "XK"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.GetTimezoneId() != "Europe/Belgrade" {
+		t.Fatalf("XK default timezone = %q, want Europe/Belgrade", d.GetTimezoneId())
 	}
 }

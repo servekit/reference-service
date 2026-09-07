@@ -55,6 +55,7 @@ func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesBy
 			FlagEmoji:     c.FlagEmoji,
 			Name:          names[cc],
 			ExampleNumber: c.ExampleNumber,
+			LanguageTags:  data.CountryLanguages[cc],
 		})
 	}
 	return &pb.ListCountriesByRegionResponse{Countries: out, DataVersion: data.Version}, nil
