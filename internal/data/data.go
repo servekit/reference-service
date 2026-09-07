@@ -37,7 +37,8 @@ type Timezone struct {
 
 // Language is one selectable BCP 47 tag.
 type Language struct {
-	Tag string
+	Tag        string
+	NativeName string // endonym, e.g. "日本語"; "" when CLDR lacks the locale
 }
 
 // Currency is one ISO 4217 currency.

@@ -109,11 +109,27 @@ func buildLanguages(cacheDir string) error {
 		}
 	}
 
-	w := newWriter("CLDR " + cldrVersion + " languages (639-1 set + zh-Hans/zh-Hant) + territoryInfo official languages")
-	w.line("// Languages is the selectable BCP 47 tag table keyed by tag.")
+	// Native names (endonyms): each language named in its own script —
+	// 日本語, 한국어, English — sourced from the language's OWN CLDR file.
+	// Best-effort: languages without a CLDR locale stay empty and the UI
+	// simply omits the column.
+	natives := make(map[string]string, len(tags))
+	for _, tag := range sortedKeys(tags) {
+		var lf languagesFile
+		if err := getJSON(urlLanguages(tag), cacheDir, &lf); err != nil {
+			continue // no CLDR locale for this tag — no endonym
+		}
+		if n := sole(lf.Main).LocaleDisplayNames.Languages[tag]; n != "" {
+			natives[tag] = n
+		}
+	}
+
+	w := newWriter("CLDR " + cldrVersion + " languages (639-1 set + zh-Hans/zh-Hant) + territoryInfo official languages + endonyms")
+	w.line("// Languages is the selectable BCP 47 tag table keyed by tag;")
+	w.line("// NativeName is the endonym (the language's own name for itself).")
 	w.line("var Languages = map[string]Language{")
 	for _, tag := range sortedKeys(tags) {
-		w.line("\t%q: {Tag: %q},", tag, tag)
+		w.line("\t%q: {Tag: %q, NativeName: %q},", tag, tag, natives[tag])
 	}
 	w.line("}")
 	w.line("")

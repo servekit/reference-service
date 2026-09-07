@@ -65,8 +65,9 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	}
 	for _, tag := range data.CountryLanguages[code] {
 		resp.Languages = append(resp.Languages, &pb.Language{
-			Tag:  tag,
-			Name: data.LanguageNames[l][tag],
+			Tag:        tag,
+			Name:       data.LanguageNames[l][tag],
+			NativeName: data.Languages[tag].NativeName,
 		})
 	}
 	for _, cc := range data.CurrencyOrder[l] {

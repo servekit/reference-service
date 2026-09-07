@@ -93,7 +93,11 @@ func (*Service) ListLanguages(_ context.Context, req *pb.ListLanguagesRequest) (
 	names := data.LanguageNames[l]
 	out := make([]*pb.Language, 0, len(data.LanguageOrder[l]))
 	for _, tag := range data.LanguageOrder[l] {
-		out = append(out, &pb.Language{Tag: tag, Name: names[tag]})
+		out = append(out, &pb.Language{
+			Tag:        tag,
+			Name:       names[tag],
+			NativeName: data.Languages[tag].NativeName,
+		})
 	}
 	return &pb.ListLanguagesResponse{Languages: out, DataVersion: data.Version}, nil
 }

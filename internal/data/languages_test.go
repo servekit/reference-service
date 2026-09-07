@@ -35,6 +35,24 @@ func TestLanguagesIntegrity(t *testing.T) {
 	}
 }
 
+func TestLanguagesNativeNames(t *testing.T) {
+	cases := map[string]string{
+		"zh-Hans": "简体中文",
+		"zh-Hant": "繁體中文",
+		"ja":      "日本語",
+		"ko":      "한국어",
+		"en":      "English",
+		"ar":      "العربية",
+		"ru":      "русский",
+		"th":      "ไทย",
+	}
+	for tag, want := range cases {
+		if got := Languages[tag].NativeName; got != want {
+			t.Errorf("%s native = %q, want %q", tag, got, want)
+		}
+	}
+}
+
 func TestLanguagesGoldenRows(t *testing.T) {
 	if got := LanguageNames["zh-Hans"]["en"]; got != "英语" {
 		t.Errorf("zh-Hans en = %q, want 英语", got)

@@ -68,8 +68,9 @@ func (*Service) ResolveCodes(_ context.Context, req *pb.ResolveCodesRequest) (*p
 		key := t.String() // canonical case: "ZH-HANS" -> "zh-Hans"
 		if _, ok := data.Languages[key]; ok {
 			resp.Languages = append(resp.Languages, &pb.Language{
-				Tag:  key,
-				Name: data.LanguageNames[l][key],
+				Tag:        key,
+				Name:       data.LanguageNames[l][key],
+				NativeName: data.Languages[key].NativeName,
 			})
 		} else {
 			resp.MissingLanguages = append(resp.MissingLanguages, tag)
