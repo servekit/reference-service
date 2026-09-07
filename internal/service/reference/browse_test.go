@@ -75,6 +75,19 @@ func TestGetCountryDefaults(t *testing.T) {
 		t.Fatalf("US defaults = %+v", us)
 	}
 
+	// UA: zone1970's first-row rule lands on the RU,UA Simferopol row; the
+	// CLDR exception (spelled with the historic alias Europe/Kiev) must be
+	// alias-normalized to Europe/Kyiv.
+	ua, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "UA"})
+	if ua.GetTimezoneId() != "Europe/Kyiv" {
+		t.Fatalf("UA default timezone = %q, want Europe/Kyiv", ua.GetTimezoneId())
+	}
+	// TW: CLDR's zh_Hant (underscore) must normalize to zh-Hant.
+	tw, _ := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "TW"})
+	if tw.GetLanguageTag() != "zh-Hant" {
+		t.Fatalf("TW default language = %q, want zh-Hant", tw.GetLanguageTag())
+	}
+
 	if _, err := s.GetCountryDefaults(ctx, &pb.GetCountryDefaultsRequest{CountryCode: "ZZ"}); err == nil {
 		t.Fatal("expected country-not-found error")
 	}

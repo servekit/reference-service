@@ -57,6 +57,16 @@ func TestListCountriesDefaultLocale(t *testing.T) {
 			break
 		}
 	}
+	// CLDR spells the script suffix with an underscore (zh_Hant); the
+	// generator normalizes — TW must carry its official Chinese.
+	for _, c := range resp.GetCountries() {
+		if c.GetCode() == "TW" {
+			if got := c.GetLanguageTags(); len(got) != 1 || got[0] != "zh-Hant" {
+				t.Fatalf("TW language_tags = %v, want [zh-Hant]", got)
+			}
+			break
+		}
+	}
 	if resp.GetDataVersion() != data.Version {
 		t.Fatalf("data_version = %q, want %q", resp.GetDataVersion(), data.Version)
 	}

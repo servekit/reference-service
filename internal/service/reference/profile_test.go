@@ -118,12 +118,18 @@ func TestGetCountryProfileAC(t *testing.T) {
 		t.Fatalf("AC timezones = %+v, want [Africa/Abidjan]", resp.GetTimezones())
 	}
 
-	// Defaults resolve through the same enrichment (XK inherits Belgrade).
+	// Defaults resolve through the same enrichment; XK is mirrored into
+	// Europe/Belgrade's membership (not defaults-only), so its profile
+	// lists the zone too.
 	d, err := s.GetCountryDefaults(context.Background(), &pb.GetCountryDefaultsRequest{CountryCode: "XK"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if d.GetTimezoneId() != "Europe/Belgrade" {
 		t.Fatalf("XK default timezone = %q, want Europe/Belgrade", d.GetTimezoneId())
+	}
+	pk, _ := s.GetCountryProfile(context.Background(), &pb.GetCountryProfileRequest{CountryCode: "XK"})
+	if len(pk.GetTimezones()) != 1 || pk.GetTimezones()[0].GetId() != "Europe/Belgrade" {
+		t.Fatalf("XK profile timezones = %+v, want [Europe/Belgrade]", pk.GetTimezones())
 	}
 }

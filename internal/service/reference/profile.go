@@ -28,10 +28,13 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	// Region chain: groups the country is a direct member of, plus their
 	// ancestors. Collect the set first, then emit in RegionGroupOrder —
 	// that order is top-down, so the continent lands before sub-regions.
+	// The ancestor walk is bounded by the group count — generated data is
+	// acyclic (tested); the bound only guards against a future data
+	// regression hanging the RPC.
 	chainSet := map[string]bool{}
 	for gCode, g := range data.RegionGroups {
 		if containsStr(g.CountryCodes, code) {
-			for cur := gCode; cur != ""; cur = data.RegionGroups[cur].ParentCode {
+			for i, cur := 0, gCode; cur != "" && i <= len(data.RegionGroups); i, cur = i+1, data.RegionGroups[cur].ParentCode {
 				chainSet[cur] = true
 			}
 		}
@@ -44,15 +47,7 @@ func (*Service) GetCountryProfile(_ context.Context, req *pb.GetCountryProfileRe
 	}
 
 	resp := &pb.GetCountryProfileResponse{
-		Country: &pb.Country{
-			Code:          c.Code,
-			Alpha_3:       c.Alpha3,
-			DialCode:      c.DialCode,
-			FlagEmoji:     c.FlagEmoji,
-			Name:          data.CountryNames[l][code],
-			ExampleNumber: c.ExampleNumber,
-			LanguageTags:  data.CountryLanguages[code],
-		},
+		Country:     countryRow(l, code, c),
 		DataVersion: data.Version,
 	}
 	for _, g := range chain {

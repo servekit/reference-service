@@ -113,10 +113,6 @@ func (s *Service) Ping(_ context.Context) (*commonv1.Pong, error) {
 	}, nil
 }
 
-// Resource resolve helpers (resolveDB / resolveRedis)
-// live in helper.go — extracted from this file to keep service.go focused on
-// the Service struct, New/Start/Stop/Ping, and the facade delegations.
-
 // setupJobs builds the jobs.Scheduler, registers it on s.mgr, and wires
 // periodic jobs. Signature is intentionally receiver-only: future jobs are
 // added inside this method as scheduler.AddFunc calls. Timezone default lives

@@ -24,10 +24,12 @@ func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesBy
 	}
 	l := resolveLocale(req.GetLocale())
 
-	// Subtree: the group plus every group descending from it.
+	// Subtree: the group plus every group descending from it. The walk is
+	// bounded by the group count — generated data is acyclic (tested), the
+	// bound only keeps a future data regression from hanging the RPC.
 	inSubtree := map[string]bool{code: true}
 	for g, rg := range data.RegionGroups {
-		for cur := rg.ParentCode; cur != ""; cur = data.RegionGroups[cur].ParentCode {
+		for i, cur := 0, rg.ParentCode; cur != "" && i <= len(data.RegionGroups); i, cur = i+1, data.RegionGroups[cur].ParentCode {
 			if cur == code {
 				inSubtree[g] = true
 				break
@@ -41,22 +43,12 @@ func (*Service) ListCountriesByRegion(_ context.Context, req *pb.ListCountriesBy
 		}
 	}
 
-	names := data.CountryNames[l]
 	out := make([]*pb.Country, 0, len(countrySet))
 	for _, cc := range data.CountryOrder[l] {
 		if !countrySet[cc] {
 			continue
 		}
-		c := data.Countries[cc]
-		out = append(out, &pb.Country{
-			Code:          c.Code,
-			Alpha_3:       c.Alpha3,
-			DialCode:      c.DialCode,
-			FlagEmoji:     c.FlagEmoji,
-			Name:          names[cc],
-			ExampleNumber: c.ExampleNumber,
-			LanguageTags:  data.CountryLanguages[cc],
-		})
+		out = append(out, countryRow(l, cc, data.Countries[cc]))
 	}
 	return &pb.ListCountriesByRegionResponse{Countries: out, DataVersion: data.Version}, nil
 }
