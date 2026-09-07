@@ -20,9 +20,17 @@ var Locales = []string{
 }
 
 // Country is one row of the country directory (locale-independent fields).
+//
+// Alpha3 provenance for the three non-officially-assigned regions this
+// directory serves: AC=ASC and TA=TAA are alpha-3 code elements the ISO
+// 3166 reserved list holds at the UPU's request (also used by ITU; the
+// UPU's GB addressing documentation lists both), and XK=XKX is the
+// user-assigned alpha-3 for Kosovo adopted de facto by the European
+// Commission, SWIFT, and the World Bank. Sources and overlay logic live
+// in tools/gen/countries.go (reservedAlpha3).
 type Country struct {
 	Code          string // ISO 3166-1 alpha-2
-	Alpha3        string // ISO 3166-1 alpha-3; "" for exceptionally-reserved codes
+	Alpha3        string // ISO 3166-1 alpha-3 (reserved/de-facto value for AC/TA/XK — see type doc)
 	DialCode      string // ITU E.164 with "+", e.g. "+86"
 	FlagEmoji     string // regional-indicator pair, e.g. "🇨🇳"
 	ExampleNumber string // libphonenumber example, e.g. "+86 138 0013 8000"; "" if none

@@ -9,7 +9,7 @@ var RegionGroups = map[string]RegionGroup{
 	"003": {Code: "003", ParentCode: "019", CountryCodes: []string{}},
 	"005": {Code: "005", ParentCode: "019", CountryCodes: []string{"AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PE", "PY", "SR", "UY", "VE"}},
 	"009": {Code: "009", ParentCode: "", CountryCodes: []string{}},
-	"011": {Code: "011", ParentCode: "002", CountryCodes: []string{"BF", "BJ", "CI", "CV", "GH", "GM", "GN", "GW", "LR", "ML", "MR", "NE", "NG", "SH", "SL", "SN", "TG"}},
+	"011": {Code: "011", ParentCode: "002", CountryCodes: []string{"AC", "BF", "BJ", "CI", "CV", "GH", "GM", "GN", "GW", "LR", "ML", "MR", "NE", "NG", "SH", "SL", "SN", "TA", "TG"}},
 	"013": {Code: "013", ParentCode: "003", CountryCodes: []string{"BZ", "CR", "GT", "HN", "MX", "NI", "PA", "SV"}},
 	"014": {Code: "014", ParentCode: "002", CountryCodes: []string{"BI", "DJ", "ER", "ET", "IO", "KE", "KM", "MG", "MU", "MW", "MZ", "RE", "RW", "SC", "SO", "SS", "TZ", "UG", "YT", "ZM", "ZW"}},
 	"015": {Code: "015", ParentCode: "002", CountryCodes: []string{"DZ", "EG", "EH", "LY", "MA", "SD", "TN"}},

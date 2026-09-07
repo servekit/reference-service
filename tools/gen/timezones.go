@@ -77,6 +77,51 @@ func buildTimezones(cacheDir string) error {
 		primary[cc] = zone
 	}
 
+	// Curated inheritance for regions tzdb deliberately carries no rows
+	// for. Two different mechanisms, on purpose:
+	//
+	// 1) Membership mirror (AC, TA). IANA models St Helena as a backward
+	//    Link Atlantic/St_Helena -> Africa/Abidjan (both UTC+0 forever), and
+	//    the zone1970.tab row accordingly lists SH among Africa/Abidjan's
+	//    country codes. Ascension and Tristan da Cunha share that
+	//    administered territory and the same UTC+0 offset, but tzdb tracks
+	//    no separate rows for them. Mirroring SH's zone membership adds
+	//    AC/TA to the same row (exactly where tzdb itself would list them
+	//    if it modeled the islands) — so both the zone's country list and
+	//    the per-country defaults resolve.
+	//
+	// 2) Defaults-only inheritance (XK). Kosovo observes the same time as
+	//    Serbia (UTC+1/+2, Europe/Belgrade rules) but is a distinct
+	//    polity; tzdb intentionally has no zone for it and RS's zone rows
+	//    do not list XK. Point the defaults map at Europe/Belgrade WITHOUT
+	//    touching the zone's country membership, keeping the timezone
+	//    directory IANA-faithful while GetCountryDefaults still answers.
+	mirrorZoneMembers := map[string]string{
+		"AC": "SH", // Ascension Island -> Saint Helena's zone (Africa/Abidjan)
+		"TA": "SH", // Tristan da Cunha -> Saint Helena's zone (Africa/Abidjan)
+	}
+	for cc, parent := range mirrorZoneMembers {
+		zone, ok := primary[parent]
+		if !ok {
+			return fmt.Errorf("mirror: no primary zone for %s", parent)
+		}
+		row := entities[zone]
+		if !containsStrTZ(row.CountryCodes, cc) {
+			row.CountryCodes = append(row.CountryCodes, cc)
+		}
+		entities[zone] = row
+		primary[cc] = zone
+	}
+	defaultZoneInheritance := map[string]string{
+		"XK": "Europe/Belgrade", // Kosovo keeps Belgrade time (UTC+1/+2)
+	}
+	for cc, zone := range defaultZoneInheritance {
+		if _, ok := entities[zone]; !ok {
+			return fmt.Errorf("inherited default zone %s for %s is not canonical", zone, cc)
+		}
+		primary[cc] = zone
+	}
+
 	// Backward links: "Link <target> <alias>". Targets may themselves be
 	// links; resolve transitively to a canonical zone.
 	aliases := make(map[string]string)
@@ -220,6 +265,16 @@ func buildTimezones(cacheDir string) error {
 	w.line("}")
 	w.line("")
 	return w.save(outputPath("timezones_data.go"))
+}
+
+// containsStrTZ reports whether ss contains want (small local helper).
+func containsStrTZ(ss []string, want string) bool {
+	for _, s := range ss {
+		if s == want {
+			return true
+		}
+	}
+	return false
 }
 
 // curatedPrimaryZones covers every multi-zone country that CLDR's 11-entry

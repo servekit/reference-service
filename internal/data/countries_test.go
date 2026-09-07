@@ -21,7 +21,9 @@ func TestCountriesIntegrity(t *testing.T) {
 				t.Errorf("%s: bad alpha3 %q", code, c.Alpha3)
 			}
 		} else {
-			noAlpha3++ // exceptionally-reserved codes have no ISO alpha-3
+			noAlpha3++ // every served region carries an alpha-3: officially
+			// assigned from the ISO dataset, or the reserved/de-facto
+			// overlay (AC=ASC, TA=TAA, XK=XKX) — see tools/gen/countries.go
 		}
 		if !dial.MatchString(c.DialCode) {
 			t.Errorf("%s: bad dial %q", code, c.DialCode)
@@ -31,8 +33,8 @@ func TestCountriesIntegrity(t *testing.T) {
 			t.Errorf("%s: bad flag %q", code, c.FlagEmoji)
 		}
 	}
-	if noAlpha3 > 10 {
-		t.Fatalf("%d countries without alpha3 — too many", noAlpha3)
+	if noAlpha3 != 0 {
+		t.Fatalf("%d countries without alpha3 — the reserved/de-facto overlay should fill AC/TA/XK", noAlpha3)
 	}
 	for _, l := range Locales {
 		names := CountryNames[l]
@@ -62,6 +64,13 @@ func TestCountriesGoldenRows(t *testing.T) {
 	cn := Countries["CN"]
 	if cn.Alpha3 != "CHN" || cn.DialCode != "+86" || cn.FlagEmoji != "\U0001F1E8\U0001F1F3" {
 		t.Fatalf("CN row wrong: %+v", cn)
+	}
+	// The three non-officially-assigned regions carry their reserved/de-facto
+	// alpha-3 (ISO reserved list for ASC/TAA; EU/SWIFT/World Bank for XKX).
+	for code, want := range map[string]string{"AC": "ASC", "TA": "TAA", "XK": "XKX"} {
+		if got := Countries[code].Alpha3; got != want {
+			t.Errorf("%s alpha3 = %q, want %q", code, got, want)
+		}
 	}
 	if CountryNames["zh-Hans"]["CN"] != "中国" {
 		t.Errorf("zh-Hans CN = %q", CountryNames["zh-Hans"]["CN"])

@@ -71,6 +71,34 @@ func buildRegionGroups(cacheDir string) error {
 		seedSet[code] = true
 	}
 
+	// UN M49 tracks Ascension Island and Tristan da Cunha as parts of Saint
+	// Helena (M49 654, "Saint Helena, Ascension and Tristan da Cunha"), not
+	// as separate territories — that is also ISO's position (ISO 3166-2:SH
+	// subdivides SH into SH-HL/SH-AC/SH-TA). CLDR territoryContainment,
+	// however, only lists the two under QO (Outlying Oceania) — a
+	// letter-coded container this generator intentionally drops — so without
+	// this fold they would belong to no served region at all and disappear
+	// from every ListCountriesByRegion answer. Following the UN hierarchy
+	// instead, both inherit the direct group memberships of their
+	// administering territory SH (002 Africa -> 011 Western Africa), which
+	// matches where the islands actually are (South Atlantic, UN Africa
+	// region) and what reference consumers expect a continent filter to do.
+	// XK needs no fold: CLDR already carries it under numeric group 039.
+	administeredFold := map[string]string{
+		"AC": "SH", // Ascension Island      -> Saint Helena
+		"TA": "SH", // Tristan da Cunha      -> Saint Helena
+	}
+	for code, parent := range administeredFold {
+		if !seedSet[code] {
+			continue // region not served by the country domain anymore
+		}
+		for g, grp := range groupsMap {
+			if isGroup(g) && grp.contains[parent] {
+				grp.contains[code] = true
+			}
+		}
+	}
+
 	var groups []string
 	for code := range groupsMap {
 		if isGroup(code) {

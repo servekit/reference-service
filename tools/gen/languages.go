@@ -83,16 +83,29 @@ func buildLanguages(cacheDir string) error {
 	}
 	countryLangs := make(map[string][]string)
 	for cc, info := range tif.Supplemental.TerritoryInfo {
-		var picks []langPop
+		var picks, byPopulation []langPop
 		for tag, lp := range info.LanguagePopulation {
-			if lp.OfficialStatus != "official" && lp.OfficialStatus != "de_facto_official" {
-				continue // official_regional / minority stay out
-			}
 			if !tags[tag] {
 				continue // not in the served language directory
 			}
 			pct, _ := strconv.ParseFloat(lp.PopulationPercent, 64)
-			picks = append(picks, langPop{tag, pct})
+			if lp.OfficialStatus == "official" || lp.OfficialStatus == "de_facto_official" {
+				picks = append(picks, langPop{tag, pct})
+			}
+			// official_regional / minority entries only ever surface via
+			// the no-official fallback below, never on their own.
+			byPopulation = append(byPopulation, langPop{tag, pct})
+		}
+		// Fallback for territories whose languagePopulation entries carry
+		// no _officialStatus at all: CLDR territoryInfo lists Ascension
+		// Island and Tristan da Cunha as 99% English but leaves the status
+		// attribute unset, so the official-only filter above would hand
+		// both an empty language list and GetCountryDefaults no answer.
+		// When nothing official was found, fall back to the plain
+		// population ranking (AC/TA -> en). Territories with no
+		// languagePopulation data at all still yield an empty list.
+		if len(picks) == 0 {
+			picks = byPopulation
 		}
 		sort.Slice(picks, func(i, j int) bool {
 			if picks[i].pct != picks[j].pct {
@@ -136,7 +149,9 @@ func buildLanguages(cacheDir string) error {
 	w.emitNames("LanguageNames", filtered)
 	w.emitOrder("LanguageOrder", orders)
 	w.line("// CountryLanguages maps alpha-2 -> official languages (official and")
-	w.line("// de facto official only, most-spoken first).")
+	w.line("// de facto official only, most-spoken first; territories with no")
+	w.line("// official-status entry fall back to plain population ranking —")
+	w.line("// e.g. AC/TA get en from CLDR's 99% share without a status flag).")
 	w.line("var CountryLanguages = map[string][]string{")
 	for _, cc := range sortedKeys(countryLangs) {
 		w.line("\t%q: {%s},", cc, quoteJoin(countryLangs[cc]))

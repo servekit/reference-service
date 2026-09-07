@@ -2279,8 +2279,11 @@ var LanguageOrder = map[string][]string{
 }
 
 // CountryLanguages maps alpha-2 -> official languages (official and
-// de facto official only, most-spoken first).
+// de facto official only, most-spoken first; territories with no
+// official-status entry fall back to plain population ranking —
+// e.g. AC/TA get en from CLDR's 99%!s(MISSING)hare without a status flag).
 var CountryLanguages = map[string][]string{
+	"AC": {"en"},
 	"AD": {"ca"},
 	"AE": {"ar"},
 	"AF": {"fa", "ps"},
@@ -2420,6 +2423,7 @@ var CountryLanguages = map[string][]string{
 	"MA": {"ar", "fr"},
 	"MC": {"fr"},
 	"MD": {"ro"},
+	"ME": {"sq", "sr"},
 	"MF": {"fr"},
 	"MG": {"mg", "fr", "en"},
 	"MH": {"en", "mh"},
@@ -2493,8 +2497,10 @@ var CountryLanguages = map[string][]string{
 	"SX": {"en", "nl"},
 	"SY": {"ar", "fr"},
 	"SZ": {"en", "ss"},
+	"TA": {"en"},
 	"TC": {"en"},
 	"TD": {"fr", "ar"},
+	"TF": {"fr"},
 	"TG": {"fr"},
 	"TH": {"th"},
 	"TJ": {"tg"},

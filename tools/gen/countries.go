@@ -19,6 +19,17 @@ type countryRow struct {
 	Code, Alpha3, DialCode, FlagEmoji, ExampleNumber string
 }
 
+// reservedAlpha3 carries alpha-3 values for the three served regions that
+// are not "officially assigned" in ISO 3166-1 and therefore absent from the
+// lukes 249-entry dataset. See the overlay block in buildCountries for the
+// per-code provenance (UPU/ISO reserved list for ASC/TAA; EU/SWIFT/World
+// Bank de-facto standard for XKX).
+var reservedAlpha3 = map[string]string{
+	"AC": "ASC",
+	"TA": "TAA",
+	"XK": "XKX",
+}
+
 // buildCountries emits the country entity table plus per-locale names and
 // collated order.
 func buildCountries(cacheDir string) error {
@@ -29,6 +40,36 @@ func buildCountries(cacheDir string) error {
 	alpha3 := make(map[string]string, len(iso))
 	for _, r := range iso {
 		alpha3[r.Alpha2] = r.Alpha3
+	}
+	// The lukes dataset carries only the 249 officially-assigned codes, so
+	// the three non-official regions this directory serves (they exist as
+	// nyaruka/phonenumbers regions, hence as rows) come out with "" alpha-3.
+	// Fill them from their authoritative reserved/de-facto registries —
+	// provenance per code:
+	//
+	//   AC -> ASC, TA -> TAA: ISO 3166-1 alpha-3 "exceptionally reserved"
+	//   code elements, reserved at the request of the Universal Postal Union
+	//   (UPU) because both are separate stamp-issuing areas; the ITU uses
+	//   the same codes. The UPU's own addressing documentation for Great
+	//   Britain (upu.int .../addressingUnit/gbrEn.pdf) lists "ASC Ascension"
+	//   and "TAA Tristan da Cunha". These are real reservations in the ISO
+	//   3166 reserved-code-elements list — just not "officially assigned",
+	//   which is why the 249-entry dataset omits them.
+	//
+	//   XK -> XKX: Kosovo is not a UN member state, so ISO 3166-1 assigns
+	//   it nothing; XK itself is a user-assigned alpha-2 that the European
+	//   Commission adopted, and XKX is the matching user-assigned alpha-3
+	//   used de facto by the European Commission, SWIFT (financial
+	//   messaging), and the World Bank (WITS country table). Community
+	//   datasets (mledoze/countries, restcountries.com) ship the same
+	//   value, bringing their totals to 250.
+	//
+	// The overlay only fills codes the ISO file left empty, so an official
+	// assignment published in a future dataset revision wins automatically.
+	for code, a3 := range reservedAlpha3 {
+		if alpha3[code] == "" {
+			alpha3[code] = a3
+		}
 	}
 
 	// CLDR territory names per locale — every locale including zh-Hans/en.
@@ -89,7 +130,7 @@ func buildCountries(cacheDir string) error {
 		orders[l] = collatedOrder(l, names[l])
 	}
 
-	w := newWriter("nyaruka/phonenumbers region metadata (dial codes) + ISO 3166 alpha-3 + CLDR " + cldrVersion + " territories")
+	w := newWriter("nyaruka/phonenumbers region metadata (dial codes) + ISO 3166 alpha-3 (+ reserved/de-facto overlay AC=ASC/TA=TAA/XK=XKX, provenance in tools/gen/countries.go) + CLDR " + cldrVersion + " territories")
 	w.line("// Countries is the entity table keyed by alpha-2.")
 	w.line("var Countries = map[string]Country{")
 	for _, code := range sortedKeys(entities) {
