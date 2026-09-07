@@ -6,7 +6,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -16,8 +15,17 @@ import (
 
 const httpTimeout = 90 * time.Second
 
+// statusError marks a deterministic upstream answer (e.g. the 404s the
+// languages endonym probe hits for ~half the tag set — CLDR ships no
+// locale for them). Retrying cannot change it, so fetch() fails fast
+// instead of burning the 3-attempt backoff on every regeneration.
+type statusError struct{ url, status string }
+
+func (e *statusError) Error() string { return "GET " + e.url + ": " + e.status }
+
 // fetch returns the URL body, hitting the network with retries (upstream
 // hosts are intermittently slow) and caching every success on disk.
+// Non-200 answers are terminal — only transport failures are retried.
 func fetch(url, cacheDir string) ([]byte, error) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return nil, err
@@ -36,6 +44,9 @@ func fetch(url, cacheDir string) ([]byte, error) {
 		if err == nil {
 			return b, nil
 		}
+		if _, ok := err.(*statusError); ok {
+			return nil, err // deterministic — retrying is wasted time
+		}
 		lastErr = err
 	}
 	return nil, lastErr
@@ -49,7 +60,7 @@ func fetchOnce(url, cachePath string) ([]byte, error) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GET %s: %s", url, resp.Status)
+		return nil, &statusError{url: url, status: resp.Status}
 	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
