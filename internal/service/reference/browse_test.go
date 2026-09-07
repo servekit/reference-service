@@ -61,7 +61,7 @@ func TestGetCountryDefaults(t *testing.T) {
 		t.Fatal(err)
 	}
 	if cn.GetTimezoneId() != "Asia/Shanghai" || cn.GetTimezoneName() != "上海" ||
-		cn.GetCurrencyCode() != "CNY" || cn.GetCurrencyName() != "人民币" || cn.GetCurrencySymbol() != "CN¥" ||
+		cn.GetCurrencyCode() != "CNY" || cn.GetCurrencyName() != "人民币" || cn.GetCurrencySymbol() != "¥" ||
 		cn.GetLanguageTag() != "zh" || cn.GetDialCode() != "+86" || cn.GetExampleNumber() == "" {
 		t.Fatalf("CN defaults = %+v", cn)
 	}
