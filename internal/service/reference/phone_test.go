@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	pb "github.com/servekit/api/gen/go/reference/v1"
+	"github.com/servekit/reference-service/internal/data"
 )
 
 func TestParsePhoneGolden(t *testing.T) {
@@ -54,5 +55,35 @@ func TestParsePhoneUSLine(t *testing.T) {
 		// US numbering cannot always distinguish — any of these is honest.
 	default:
 		t.Fatalf("US line type = %v", got.GetType())
+	}
+}
+
+// TestExampleNumbersAreMobile guards the placeholder data: the example must
+// parse as a MOBILE number (regions that cannot distinguish mobile from
+// fixed line by prefix are exempt — their type is FIXED_LINE_OR_MOBILE).
+func TestExampleNumbersAreMobile(t *testing.T) {
+	s := New()
+	ctx := context.Background()
+	exempt := map[string]bool{"US": true, "CA": true} // NANP: same prefix space
+	checked := 0
+	for _, cc := range []string{"CN", "AT", "DE", "RU", "JP", "GB", "FR", "BR", "IN", "AU"} {
+		c, ok := data.Countries[cc]
+		if !ok || c.ExampleNumber == "" {
+			t.Fatalf("%s: no example number", cc)
+		}
+		if exempt[cc] {
+			continue
+		}
+		p, err := s.ParsePhone(ctx, &pb.ParsePhoneRequest{Raw: c.ExampleNumber})
+		if err != nil || !p.GetIsValid() {
+			t.Fatalf("%s: example %q does not parse: %+v err=%v", cc, c.ExampleNumber, p, err)
+		}
+		if p.GetType() != pb.PhoneType_PHONE_TYPE_MOBILE {
+			t.Errorf("%s: example %q parses as %v, want MOBILE", cc, c.ExampleNumber, p.GetType())
+		}
+		checked++
+	}
+	if checked < 8 {
+		t.Fatalf("only %d countries checked", checked)
 	}
 }

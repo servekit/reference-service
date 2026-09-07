@@ -10,7 +10,7 @@ package data
 
 // Version is the data snapshot stamp (generation date), shared by every
 // domain and returned as data_version on each response.
-const Version = "2026-09-06"
+const Version = "2026-09-07"
 
 // Locales lists the compiled locales in priority order; Locales[0] (zh-Hans)
 // is the default when a request omits locale. Unresolvable locales fall

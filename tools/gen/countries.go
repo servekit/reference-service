@@ -122,13 +122,23 @@ func derivedDials() map[string]string {
 }
 
 // exampleNumber returns the region's libphonenumber example number in
-// international display form ("" when the metadata has none).
+// international display form, preferring a MOBILE example (the placeholder
+// sits in a phone-number field, and the generic example is a fixed-line
+// number in many regions — AT/CN/DE among them). Fallbacks:
+// fixed-line-or-mobile, then the generic example.
 func exampleNumber(region string) string {
-	num := phonenumbers.GetExampleNumber(region)
-	if num == nil {
-		return ""
+	for _, typ := range []phonenumbers.PhoneNumberType{
+		phonenumbers.MOBILE,
+		phonenumbers.FIXED_LINE_OR_MOBILE,
+	} {
+		if num := phonenumbers.GetExampleNumberForType(region, typ); num != nil {
+			return phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
+		}
 	}
-	return phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
+	if num := phonenumbers.GetExampleNumber(region); num != nil {
+		return phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
+	}
+	return ""
 }
 
 // flagEmoji maps alpha-2 to the Unicode regional-indicator pair.
