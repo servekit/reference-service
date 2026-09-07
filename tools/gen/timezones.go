@@ -119,17 +119,14 @@ func buildTimezones(cacheDir string) error {
 		zones := sole(tf.Main).Dates.TimeZoneNames.Zone
 		names[l] = make(map[string]string, len(entities))
 		for id := range entities {
-			parts := strings.SplitN(id, "/", 2)
-			if len(parts) != 2 {
+			if city := exemplarCity(zones, id); city != "" {
+				names[l][id] = city
 				continue
 			}
-			if entry, ok := zones[parts[0]][parts[1]]; ok && entry.ExemplarCity != "" {
-				names[l][id] = entry.ExemplarCity
-				continue
-			}
-			// No exemplar city (Etc/*, golden zones, third-level ids like
-			// America/Argentina/Buenos_Aires) — display the last segment.
-			names[l][id] = strings.ReplaceAll(parts[len(parts)-1], "_", " ")
+			// No exemplar city (Etc/*, golden zones) — display the last
+			// path segment with underscores as spaces.
+			last := id[strings.LastIndex(id, "/")+1:]
+			names[l][id] = strings.ReplaceAll(last, "_", " ")
 		}
 	}
 

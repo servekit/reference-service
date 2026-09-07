@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 const cldrVersion = "45.0.0"
@@ -71,16 +72,36 @@ type languagesFile struct {
 	} `json:"main"`
 }
 
+// timezoneNamesFile: CLDR nests zone trees arbitrarily deep
+// (zone > America > Argentina > Buenos_Aires), so the tree is decoded as
+// generic maps and walked segment by segment.
 type timezoneNamesFile struct {
 	Main map[string]struct {
 		Dates struct {
 			TimeZoneNames struct {
-				Zone map[string]map[string]struct {
-					ExemplarCity string `json:"exemplarCity"`
-				} `json:"zone"`
+				Zone map[string]any `json:"zone"`
 			} `json:"timeZoneNames"`
 		} `json:"dates"`
 	} `json:"main"`
+}
+
+// exemplarCity walks a zone tree along the id's segments and returns the
+// deepest exemplarCity ("" when the path is absent).
+func exemplarCity(tree map[string]any, id string) string {
+	segs := strings.Split(id, "/")
+	node := tree
+	for i, seg := range segs {
+		next, ok := node[seg].(map[string]any)
+		if !ok {
+			_ = i
+			return ""
+		}
+		node = next
+	}
+	if city, ok := node["exemplarCity"].(string); ok {
+		return city
+	}
+	return ""
 }
 
 // currencyNameEntry is one CLDR currencies.json leaf.
