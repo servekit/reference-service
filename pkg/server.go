@@ -83,6 +83,7 @@ func NewServer(cfg *config.Config, opts ...ServerOption) (*Server, error) {
 		},
 		nil, // no HTTP gateway — gRPC-only service (scaffolded without --http)
 		grpcx.ErrorInterceptor,
+		grpcx.TrustedActorUnary(),
 		protovalidate_middleware.UnaryServerInterceptor(validator),
 	)
 

@@ -6,6 +6,7 @@ import (
 	commonv1 "github.com/servekit/api/gen/go/common/v1"
 	referencev1 "github.com/servekit/api/gen/go/reference/v1"
 
+	"github.com/servekit/go-common/grpcx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -36,6 +37,7 @@ var _ referencev1.ReferenceServiceServer = (*Client)(nil)
 func NewClient(addr string, opts ...grpc.DialOption) (*Client, error) {
 	dialOpts := append([]grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(grpcx.ForwardActorUnary()),
 	}, opts...)
 
 	conn, err := grpc.NewClient(addr, dialOpts...)
